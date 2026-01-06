@@ -1,11 +1,13 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import {
   View,
   Text,
   TextInput,
   Pressable,
   StyleSheet,
-  KeyboardAvoidingView,
+  ScrollView,
+  Keyboard,
+  InputAccessoryView,
   Platform,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -21,6 +23,8 @@ const PROMPTS = [
   'I need perspective on...',
 ];
 
+const INPUT_ACCESSORY_ID = 'pania-input-accessory';
+
 function getGreeting(): string {
   const hour = new Date().getHours();
   if (hour < 12) return 'Good morning';
@@ -30,6 +34,8 @@ function getGreeting(): string {
 
 export default function OpeningPromptScreen() {
   const [text, setText] = useState('');
+  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
+  const inputRef = useRef<TextInput>(null);
   const insets = useSafeAreaInsets();
   const colorScheme = useColorScheme() ?? 'light';
   const colors = Colors[colorScheme];
@@ -37,11 +43,12 @@ export default function OpeningPromptScreen() {
 
   const handlePromptPress = (prompt: string) => {
     setText(prompt);
+    inputRef.current?.focus();
   };
 
   const handleContinue = () => {
     if (text.trim()) {
-      // Navigate to clarification screen (to be implemented)
+      Keyboard.dismiss();
       router.push({
         pathname: '/clarify',
         params: { input: text.trim() },
@@ -62,47 +69,49 @@ export default function OpeningPromptScreen() {
         },
       ]}
     >
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.keyboardAvoid}
+      {/* Greeting */}
+      <Text
+        style={[
+          styles.greeting,
+          {
+            color: colors.text,
+            fontFamily: fonts?.serif,
+          },
+        ]}
       >
-        {/* Greeting */}
-        <Text
-          style={[
-            styles.greeting,
-            {
-              color: colors.text,
-              fontFamily: fonts?.serif,
-            },
-          ]}
-        >
-          {getGreeting()}, David.
-        </Text>
+        {getGreeting()}, David.
+      </Text>
 
-        {/* Question */}
-        <Text
-          style={[
-            styles.question,
-            {
-              color: colors.textSecondary,
-              fontFamily: fonts?.serif,
-            },
-          ]}
-        >
-          What&apos;s on your mind?
-        </Text>
+      {/* Question */}
+      <Text
+        style={[
+          styles.question,
+          {
+            color: colors.textSecondary,
+            fontFamily: fonts?.serif,
+          },
+        ]}
+      >
+        What&apos;s on your mind?
+      </Text>
 
-        {/* Text Input - grows to fill available space */}
-        <View
-          style={[
-            styles.inputContainer,
-            {
-              backgroundColor: colors.backgroundInput,
-              borderColor: colors.border,
-            },
-          ]}
+      {/* Text Input - fixed height, scrollable */}
+      <View
+        style={[
+          styles.inputContainer,
+          {
+            backgroundColor: colors.backgroundInput,
+            borderColor: colors.border,
+          },
+        ]}
+      >
+        <ScrollView
+          style={styles.inputScroll}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
         >
           <TextInput
+            ref={inputRef}
             value={text}
             onChangeText={setText}
             placeholder="Start writing..."
@@ -116,82 +125,129 @@ export default function OpeningPromptScreen() {
             ]}
             multiline
             textAlignVertical="top"
+            onFocus={() => setIsKeyboardVisible(true)}
+            onBlur={() => setIsKeyboardVisible(false)}
+            inputAccessoryViewID={Platform.OS === 'ios' ? INPUT_ACCESSORY_ID : undefined}
           />
-        </View>
+        </ScrollView>
+      </View>
 
-        {/* Divider */}
-        <View style={styles.dividerContainer}>
-          <View style={[styles.dividerLine, { backgroundColor: colors.divider }]} />
-          <Text
-            style={[
-              styles.dividerText,
+      {/* Show prompts and button when keyboard is hidden */}
+      {!isKeyboardVisible && (
+        <>
+          {/* Divider */}
+          <View style={styles.dividerContainer}>
+            <View style={[styles.dividerLine, { backgroundColor: colors.divider }]} />
+            <Text
+              style={[
+                styles.dividerText,
+                {
+                  color: colors.textMuted,
+                  fontFamily: fonts?.sans,
+                },
+              ]}
+            >
+              or choose a prompt
+            </Text>
+            <View style={[styles.dividerLine, { backgroundColor: colors.divider }]} />
+          </View>
+
+          {/* Prompt Buttons */}
+          <View style={styles.promptsContainer}>
+            {PROMPTS.map((prompt, index) => (
+              <Pressable
+                key={index}
+                onPress={() => handlePromptPress(prompt)}
+                style={({ pressed }) => [
+                  styles.promptButton,
+                  {
+                    backgroundColor: colors.backgroundInput,
+                    borderColor: colors.border,
+                    opacity: pressed ? 0.8 : 1,
+                    transform: [{ scale: pressed ? 0.99 : 1 }],
+                  },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.promptText,
+                    {
+                      color: colors.textSecondary,
+                      fontFamily: fonts?.sans,
+                    },
+                  ]}
+                >
+                  {prompt}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+
+          {/* Continue Button */}
+          <Pressable
+            onPress={handleContinue}
+            disabled={isButtonDisabled}
+            style={({ pressed }) => [
+              styles.continueButton,
               {
-                color: colors.textMuted,
-                fontFamily: fonts?.sans,
+                backgroundColor: colors.buttonPrimary,
+                opacity: isButtonDisabled ? 0.4 : pressed ? 0.8 : 1,
               },
             ]}
           >
-            or choose a prompt
-          </Text>
-          <View style={[styles.dividerLine, { backgroundColor: colors.divider }]} />
-        </View>
-
-        {/* Prompt Buttons */}
-        <View style={styles.promptsContainer}>
-          {PROMPTS.map((prompt, index) => (
-            <Pressable
-              key={index}
-              onPress={() => handlePromptPress(prompt)}
-              style={({ pressed }) => [
-                styles.promptButton,
+            <Text
+              style={[
+                styles.continueButtonText,
                 {
-                  backgroundColor: colors.backgroundInput,
-                  borderColor: colors.border,
-                  opacity: pressed ? 0.8 : 1,
-                  transform: [{ scale: pressed ? 0.99 : 1 }],
+                  color: colors.buttonText,
+                  fontFamily: fonts?.sans,
+                },
+              ]}
+            >
+              Continue
+            </Text>
+          </Pressable>
+        </>
+      )}
+
+      {/* iOS Keyboard Accessory - Continue button above keyboard */}
+      {Platform.OS === 'ios' && (
+        <InputAccessoryView nativeID={INPUT_ACCESSORY_ID}>
+          <View
+            style={[
+              styles.accessoryContainer,
+              {
+                backgroundColor: colors.backgroundCard,
+                borderTopColor: colors.border,
+              },
+            ]}
+          >
+            <Pressable
+              onPress={handleContinue}
+              disabled={isButtonDisabled}
+              style={({ pressed }) => [
+                styles.accessoryButton,
+                {
+                  backgroundColor: colors.buttonPrimary,
+                  opacity: isButtonDisabled ? 0.4 : pressed ? 0.8 : 1,
                 },
               ]}
             >
               <Text
                 style={[
-                  styles.promptText,
+                  styles.accessoryButtonText,
                   {
-                    color: colors.textSecondary,
+                    color: colors.buttonText,
                     fontFamily: fonts?.sans,
                   },
                 ]}
               >
-                {prompt}
+                Continue
               </Text>
             </Pressable>
-          ))}
-        </View>
-
-        {/* Continue Button - always at bottom */}
-        <Pressable
-          onPress={handleContinue}
-          disabled={isButtonDisabled}
-          style={({ pressed }) => [
-            styles.continueButton,
-            {
-              backgroundColor: colors.buttonPrimary,
-              opacity: isButtonDisabled ? 0.4 : pressed ? 0.8 : 1,
-            },
-          ]}
-        >
-          <Text
-            style={[
-              styles.continueButtonText,
-              {
-                color: colors.buttonText,
-                fontFamily: fonts?.sans,
-              },
-            ]}
-          >
-            Continue
-          </Text>
-        </Pressable>
-      </KeyboardAvoidingView>
+          </View>
+        </InputAccessoryView>
+      )}
     </View>
   );
 }
@@ -200,9 +256,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingHorizontal: Spacing.xl,
-  },
-  keyboardAvoid: {
-    flex: 1,
   },
   greeting: {
     fontSize: Typography.greeting.fontSize,
@@ -220,11 +273,14 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.lg,
     minHeight: 100,
   },
-  textInput: {
+  inputScroll: {
     flex: 1,
+  },
+  textInput: {
     fontSize: Typography.body.fontSize,
     lineHeight: Typography.body.lineHeight,
     padding: Spacing.md,
+    minHeight: 100,
   },
   dividerContainer: {
     flexDirection: 'row',
@@ -259,6 +315,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   continueButtonText: {
+    fontSize: Typography.button.fontSize,
+    fontWeight: '500',
+  },
+  accessoryContainer: {
+    padding: Spacing.md,
+    borderTopWidth: 1,
+  },
+  accessoryButton: {
+    paddingVertical: Spacing.md,
+    borderRadius: BorderRadius.full,
+    alignItems: 'center',
+  },
+  accessoryButtonText: {
     fontSize: Typography.button.fontSize,
     fontWeight: '500',
   },
