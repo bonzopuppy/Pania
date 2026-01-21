@@ -3,7 +3,7 @@
  * A warm, serene color palette inspired by journal aesthetics
  */
 
-import { Platform } from 'react-native';
+// Pania Design System fonts and theme
 
 // Core Pania palette
 export const Palette = {
@@ -91,26 +91,18 @@ export const Colors = {
   },
 };
 
-export const Fonts = Platform.select({
-  ios: {
-    sans: 'System',
-    serif: 'Georgia',
-    rounded: 'System',
-    mono: 'Menlo',
-  },
-  android: {
-    sans: 'Roboto',
-    serif: 'serif',
-    rounded: 'Roboto',
-    mono: 'monospace',
-  },
-  default: {
-    sans: 'System',
-    serif: 'Georgia',
-    rounded: 'System',
-    mono: 'monospace',
-  },
-});
+export const Fonts = {
+  // Gambarino - serif font for headings and titles
+  serif: 'Gambarino-Regular',
+  // Figtree - sans-serif font for body text
+  sans: 'Figtree_400Regular',
+  sansMedium: 'Figtree_500Medium',
+  sansSemiBold: 'Figtree_600SemiBold',
+  sansBold: 'Figtree_700Bold',
+  // Aliases for compatibility
+  rounded: 'Figtree_400Regular',
+  mono: 'Figtree_400Regular', // Using Figtree as fallback for mono
+};
 
 export const Typography = {
   greeting: {
