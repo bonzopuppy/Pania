@@ -20,8 +20,9 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Fonts, Typography, Spacing, BorderRadius } from '@/constants/theme';
-import { signInWithOAuth, type OAuthProvider } from '@/services/auth';
+import { Fonts, Typography, Spacing } from '@/constants/theme';
+
+type OAuthProvider = 'google' | 'apple';
 
 // SVG imports
 import PaniaPattern from '@/assets/images/pania-pattern.svg';
@@ -83,19 +84,11 @@ export default function WelcomeScreen() {
     ]).start();
   }, [fadeAnim, slideAnim]);
 
-  const handleOAuthSignIn = async (provider: OAuthProvider) => {
-    setLoading(true);
-    try {
-      const result = await signInWithOAuth(provider);
-
-      if (result.error) {
-        Alert.alert('Error', result.error.message);
-      } else {
-        router.replace('/(tabs)');
-      }
-    } finally {
-      setLoading(false);
-    }
+  const handleOAuthSignIn = (provider: OAuthProvider) => {
+    Alert.alert(
+      'Coming Soon',
+      `Sign in with ${provider === 'google' ? 'Google' : 'Apple'} will be available soon.`
+    );
   };
 
   const handleSignIn = () => {

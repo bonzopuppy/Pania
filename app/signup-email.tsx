@@ -23,6 +23,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Fonts, Typography, Spacing } from '@/constants/theme';
 import { signUp } from '@/services/auth';
+import { clearAllData } from '@/services/storage';
 
 // SVG imports
 import PaniaPattern from '@/assets/images/pania-pattern.svg';
@@ -84,12 +85,16 @@ export default function SignUpEmailScreen() {
     setLoading(true);
 
     try {
+      // Clear any existing user data before creating new account
+      await clearAllData();
+
       const result = await signUp(email, password);
 
       if (result.error) {
         Alert.alert('Error', result.error.message);
       } else if (result.user) {
-        router.replace('/(tabs)');
+        // New users go to onboarding to enter their name
+        router.replace('/onboarding-name');
       }
     } finally {
       setLoading(false);
