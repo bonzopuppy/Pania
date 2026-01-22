@@ -9,6 +9,13 @@ import {
   Alert,
   Dimensions,
 } from 'react-native';
+import Reanimated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withRepeat,
+  withTiming,
+  Easing,
+} from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -41,6 +48,25 @@ export default function WelcomeScreen() {
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(20)).current;
+
+  // Pattern rotation animation
+  const rotation = useSharedValue(0);
+
+  useEffect(() => {
+    // Slow continuous rotation - completes one rotation every 60 seconds
+    rotation.value = withRepeat(
+      withTiming(360, {
+        duration: 60000,
+        easing: Easing.linear,
+      }),
+      -1, // Infinite repeats
+      false // Don't reverse
+    );
+  }, []);
+
+  const patternAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ rotate: `${rotation.value}deg` }],
+  }));
 
   useEffect(() => {
     Animated.parallel([
@@ -98,12 +124,12 @@ export default function WelcomeScreen() {
       />
 
       {/* Layer 2: Decorative Pattern */}
-      <View style={styles.patternContainer}>
+      <Reanimated.View style={[styles.patternContainer, patternAnimatedStyle]}>
         <PaniaPattern
           width={SCREEN_WIDTH * 1.3}
           height={SCREEN_HEIGHT * 0.56}
         />
-      </View>
+      </Reanimated.View>
 
       {/* Layer 3: Gradient overlay - transparent at top, opaque at bottom */}
       <LinearGradient

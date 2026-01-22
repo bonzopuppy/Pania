@@ -105,6 +105,8 @@ export default function RootLayout() {
       <Stack>
         <Stack.Screen name="welcome" options={{ headerShown: false }} />
         <Stack.Screen name="signin" options={{ headerShown: false, animation: 'slide_from_bottom' }} />
+        <Stack.Screen name="signup-email" options={{ headerShown: false, animation: 'slide_from_bottom' }} />
+        <Stack.Screen name="terms-of-service" options={{ headerShown: false, animation: 'slide_from_bottom' }} />
         <Stack.Screen name="onboarding-name" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen
