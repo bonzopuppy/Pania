@@ -7,7 +7,8 @@ import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useChat, ChatStage } from '@/contexts/ChatContext';
 import { aiService, Passage } from '@/services/ai';
 import { getUserName, getUserId, clearOnboarding } from '@/services/storage';
-import { saveJournalEntry, CreateJournalEntryParams } from '@/services/journal';
+import { saveJournalEntry, updateJournalEntry, getJournalEntry, CreateJournalEntryParams } from '@/services/journal';
+import { supabase } from '@/services/supabase';
 import { resetEverything } from '@/services/debug';
 import { router } from 'expo-router';
 import SignupModal from '@/components/SignupModal';
@@ -23,9 +24,10 @@ const FigmaColors = {
 
 interface ChatContainerProps {
   onOpenJournals?: () => void;
+  restoreEntryId?: string;
 }
 
-export default function ChatContainer({ onOpenJournals }: ChatContainerProps) {
+export default function ChatContainer({ onOpenJournals, restoreEntryId }: ChatContainerProps) {
   const insets = useSafeAreaInsets();
   const colorScheme = useColorScheme() ?? 'light';
   const colors = Colors[colorScheme];
@@ -49,6 +51,9 @@ export default function ChatContainer({ onOpenJournals }: ChatContainerProps) {
     setError,
     setStage,
     addShownThinkers,
+    setJournalEntryId,
+    getConversationData,
+    restoreFromEntry,
   } = useChat();
 
   const [userName, setUserName] = useState<string | null>(null);
@@ -66,6 +71,70 @@ export default function ChatContainer({ onOpenJournals }: ChatContainerProps) {
   // Ref for chat input
   const chatInputRef = useRef<ChatInputRef>(null);
 
+  // Create initial journal entry when user first submits input
+  const createInitialEntry = async (text: string) => {
+    // Check Supabase auth directly (not AsyncStorage) to ensure consistency with saveJournalEntry
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      // Not logged in - can't create entry
+      console.log('createInitialEntry: User not authenticated with Supabase, skipping entry creation');
+      return;
+    }
+    console.log('createInitialEntry: User authenticated, creating entry for:', text.substring(0, 50));
+
+    try {
+      // We need to wait briefly for the context to update with the new message
+      // So we build a minimal conversation data object here
+      const params: CreateJournalEntryParams = {
+        userInput: text,
+        conversationData: {
+          messages: [
+            { type: 'greeting', text: state.messages[0]?.type === 'greeting' ? (state.messages[0] as { text: string }).text : 'Hi', timestamp: new Date().toISOString() },
+            { type: 'user_input', text, timestamp: new Date().toISOString() },
+          ],
+          stage: 'loading_clarify',
+          userInput: text,
+          clarification: '',
+          selectedVoice: null,
+          shownThinkers: [],
+          savedAt: new Date().toISOString(),
+          isComplete: false,
+        },
+      };
+
+      const { entry, error } = await saveJournalEntry(params);
+      if (error) {
+        console.error('Failed to save initial journal entry:', error);
+        return;
+      }
+      if (entry) {
+        setJournalEntryId(entry.id);
+        console.log('Created initial journal entry:', entry.id);
+      } else {
+        console.warn('No entry returned from saveJournalEntry');
+      }
+    } catch (error) {
+      console.error('Failed to create initial entry:', error);
+    }
+  };
+
+  // Update existing journal entry with current conversation state
+  const updateEntryConversation = async () => {
+    if (!state.journalEntryId) return;
+
+    try {
+      const conversationData = getConversationData();
+      await updateJournalEntry(state.journalEntryId, {
+        userInput: state.userInput,
+        clarification: state.clarification || undefined,
+        conversationData,
+      });
+      console.log('Updated journal entry conversation:', state.journalEntryId);
+    } catch (error) {
+      console.error('Failed to update entry conversation:', error);
+    }
+  };
+
   // Load user name on mount (with dev fallback)
   useEffect(() => {
     getUserName().then((name) => {
@@ -75,12 +144,34 @@ export default function ChatContainer({ onOpenJournals }: ChatContainerProps) {
     });
   }, []);
 
-  // Initialize greeting only after userName is loaded
+  // Initialize greeting only after userName is loaded (skip if restoring)
   useEffect(() => {
-    if (userNameLoaded && state.messages.length === 0) {
+    if (userNameLoaded && state.messages.length === 0 && !restoreEntryId) {
       addGreeting(userName);
     }
-  }, [userNameLoaded, userName, state.messages.length, addGreeting]);
+  }, [userNameLoaded, userName, state.messages.length, addGreeting, restoreEntryId]);
+
+  // Restore from entry if restoreEntryId is provided
+  useEffect(() => {
+    if (restoreEntryId && userNameLoaded) {
+      const restoreEntry = async () => {
+        console.log('Restoring conversation from entry:', restoreEntryId);
+        const { entry, error } = await getJournalEntry(restoreEntryId);
+        if (error) {
+          console.error('Failed to fetch entry for restoration:', error);
+          // Fall back to normal greeting
+          if (state.messages.length === 0) {
+            addGreeting(userName);
+          }
+          return;
+        }
+        if (entry) {
+          restoreFromEntry(entry);
+        }
+      };
+      restoreEntry();
+    }
+  }, [restoreEntryId, userNameLoaded]);
 
   // Track keyboard visibility
   useEffect(() => {
@@ -164,8 +255,12 @@ export default function ChatContainer({ onOpenJournals }: ChatContainerProps) {
   const handleSubmit = async (text: string) => {
     if (state.stage === 'awaiting_input') {
       submitUserInput(text);
+      // Create initial journal entry for logged-in users
+      createInitialEntry(text);
     } else if (state.stage === 'awaiting_response') {
       submitUserResponse(text);
+      // Update entry with clarification (after a brief delay to let context update)
+      setTimeout(() => updateEntryConversation(), 100);
     } else if (state.stage === 'showing_voices') {
       // User is asking about the cards or providing more context
       // Treat as additional clarification and fetch new voices
@@ -209,20 +304,47 @@ export default function ChatContainer({ onOpenJournals }: ChatContainerProps) {
     // Auto-save for logged-in users
     setIsSaving(true);
     try {
-      const params: CreateJournalEntryParams = {
-        userInput: state.userInput,
-        clarification: state.clarification,
-        tradition: voice.tradition,
-        thinker: voice.thinker,
-        passageText: voice.text,
-        source: voice.source,
-        context: voice.context,
-        reflectionQuestion: voice.reflectionQuestion,
-      };
+      // Build conversation data with the selected voice
+      const conversationData = getConversationData();
+      // Ensure the voice is marked as selected in the data
+      conversationData.selectedVoice = voice;
+      conversationData.isComplete = true;
 
-      const { error } = await saveJournalEntry(params);
-      if (!error) {
-        setSaved(true);
+      if (state.journalEntryId) {
+        // Update existing entry
+        const { error } = await updateJournalEntry(state.journalEntryId, {
+          tradition: voice.tradition,
+          thinker: voice.thinker,
+          passageText: voice.text,
+          source: voice.source,
+          context: voice.context,
+          reflectionQuestion: voice.reflectionQuestion,
+          conversationData,
+        });
+        if (!error) {
+          setSaved(true);
+        }
+      } else {
+        // Create new entry (fallback, shouldn't normally happen)
+        const params: CreateJournalEntryParams = {
+          userInput: state.userInput,
+          clarification: state.clarification,
+          tradition: voice.tradition,
+          thinker: voice.thinker,
+          passageText: voice.text,
+          source: voice.source,
+          context: voice.context,
+          reflectionQuestion: voice.reflectionQuestion,
+          conversationData,
+        };
+
+        const { entry, error } = await saveJournalEntry(params);
+        if (!error) {
+          setSaved(true);
+          if (entry) {
+            setJournalEntryId(entry.id);
+          }
+        }
       }
     } catch (error) {
       console.error('Auto-save failed:', error);
@@ -250,23 +372,50 @@ export default function ChatContainer({ onOpenJournals }: ChatContainerProps) {
     try {
       if (!state.selectedVoice) return;
 
-      const params: CreateJournalEntryParams = {
-        userInput: state.userInput,
-        clarification: state.clarification,
-        tradition: state.selectedVoice.tradition,
-        thinker: state.selectedVoice.thinker,
-        passageText: state.selectedVoice.text,
-        source: state.selectedVoice.source,
-        context: state.selectedVoice.context,
-        reflectionQuestion: state.selectedVoice.reflectionQuestion,
-      };
+      const conversationData = getConversationData();
+      conversationData.isComplete = true;
 
-      const { error } = await saveJournalEntry(params);
-      if (error) {
-        Alert.alert('Error', `Failed to save: ${error.message}`);
+      if (state.journalEntryId) {
+        // Update existing entry
+        const { error } = await updateJournalEntry(state.journalEntryId, {
+          tradition: state.selectedVoice.tradition,
+          thinker: state.selectedVoice.thinker,
+          passageText: state.selectedVoice.text,
+          source: state.selectedVoice.source,
+          context: state.selectedVoice.context,
+          reflectionQuestion: state.selectedVoice.reflectionQuestion,
+          conversationData,
+        });
+        if (error) {
+          Alert.alert('Error', `Failed to save: ${error.message}`);
+        } else {
+          setSaved(true);
+          Alert.alert('Saved!', 'Your reflection has been saved to your journal.');
+        }
       } else {
-        setSaved(true);
-        Alert.alert('Saved!', 'Your reflection has been saved to your journal.');
+        // Create new entry
+        const params: CreateJournalEntryParams = {
+          userInput: state.userInput,
+          clarification: state.clarification,
+          tradition: state.selectedVoice.tradition,
+          thinker: state.selectedVoice.thinker,
+          passageText: state.selectedVoice.text,
+          source: state.selectedVoice.source,
+          context: state.selectedVoice.context,
+          reflectionQuestion: state.selectedVoice.reflectionQuestion,
+          conversationData,
+        };
+
+        const { entry, error } = await saveJournalEntry(params);
+        if (error) {
+          Alert.alert('Error', `Failed to save: ${error.message}`);
+        } else {
+          setSaved(true);
+          if (entry) {
+            setJournalEntryId(entry.id);
+          }
+          Alert.alert('Saved!', 'Your reflection has been saved to your journal.');
+        }
       }
     } catch (error) {
       Alert.alert('Error', 'Something went wrong. Please try again.');

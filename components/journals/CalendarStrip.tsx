@@ -7,8 +7,7 @@ import VoicesGuideIcon from '@/assets/images/voices-guide.svg';
 import { Colors, Fonts, Typography, Spacing, BorderRadius, Palette } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { router } from 'expo-router';
-
-type Tradition = 'stoicism' | 'christianity' | 'buddhism' | 'sufism' | 'taoism' | 'judaism';
+import { TRADITION_GRADIENTS, Tradition } from '@/utils/traditionAnalytics';
 
 interface CalendarStripProps {
   selectedDate: Date;
@@ -34,20 +33,20 @@ export default function CalendarStrip({
   // Track the displayed month/year for expanded view
   const [displayedMonth, setDisplayedMonth] = useState(new Date());
 
-  // Generate week dates centered on today
+  // Generate week dates centered on selected date
   const weekDates = useMemo(() => {
-    const today = new Date();
+    const centerDate = selectedDate;
     const dates: Date[] = [];
 
-    // Get 3 days before and 3 days after today (7 day strip)
+    // Get 3 days before and 3 days after the selected date (7 day strip)
     for (let i = -3; i <= 3; i++) {
-      const date = new Date(today);
-      date.setDate(today.getDate() + i);
+      const date = new Date(centerDate);
+      date.setDate(centerDate.getDate() + i);
       dates.push(date);
     }
 
     return dates;
-  }, []);
+  }, [selectedDate]);
 
   // Generate month dates for expanded view
   const monthDates = useMemo(() => {
@@ -155,18 +154,18 @@ export default function CalendarStrip({
       );
     }
 
-    // Show colored tradition dots (max 3)
+    // Show gradient tradition dots (max 3)
     return (
       <View style={styles.dotsContainer}>
         {traditions.slice(0, 3).map((tradition, index) => {
-          const traditionColors = Palette.traditions[tradition as Tradition] || Palette.traditions.stoicism;
+          const gradientColors = TRADITION_GRADIENTS[tradition as Tradition] || TRADITION_GRADIENTS.stoicism;
           return (
-            <View
+            <LinearGradient
               key={index}
-              style={[
-                styles.dot,
-                { backgroundColor: traditionColors.primary },
-              ]}
+              colors={gradientColors}
+              style={styles.dot}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
             />
           );
         })}
@@ -206,6 +205,28 @@ export default function CalendarStrip({
                         <LinearGradient
                           colors={['#FC9F4D', '#FAD689']}
                           style={styles.dayContentSelected}
+                        >
+                          <Text
+                            style={[
+                              styles.dayName,
+                              { color: '#282621' },
+                            ]}
+                          >
+                            {formatDayName(date)}
+                          </Text>
+                          <Text
+                            style={[
+                              styles.dayNumber,
+                              { color: '#282621' },
+                            ]}
+                          >
+                            {formatDayNumber(date)}
+                          </Text>
+                        </LinearGradient>
+                      ) : today ? (
+                        <LinearGradient
+                          colors={['rgba(252,159,77,0.24)', 'rgba(250,214,137,0.24)']}
+                          style={styles.dayContentToday}
                         >
                           <Text
                             style={[
@@ -499,6 +520,16 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderRadius: 32,
     overflow: 'hidden',
+  },
+  dayContentToday: {
+    width: 32,
+    height: 52,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 32,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(252,159,77,0.8)',
   },
   dayName: {
     fontSize: 12,

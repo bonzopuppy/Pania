@@ -37,14 +37,19 @@ export default function JournalsScreen() {
 
   const loadEntries = async () => {
     const userId = await getUserId();
+    console.log('Journals: loadEntries called, userId from storage:', userId);
     setIsLoggedIn(!!userId);
 
     if (userId) {
       setIsLoading(true);
       try {
         const { entries: journalEntries, error } = await getJournalEntries();
+        console.log('Journals: loaded entries count:', journalEntries?.length, 'error:', error?.message);
         if (!error && journalEntries) {
           setEntries(journalEntries);
+          // Log incomplete entries specifically
+          const incompleteCount = journalEntries.filter(e => !e.thinker).length;
+          console.log('Journals: incomplete entries (no thinker):', incompleteCount);
         }
       } catch (e) {
         console.error('Failed to load journal entries:', e);
@@ -69,11 +74,6 @@ export default function JournalsScreen() {
 
   const handleOpenProfile = () => {
     router.push('/profile');
-  };
-
-  const handleEntryPress = (entry: JournalEntry) => {
-    // Could navigate to a detail view in the future
-    console.log('Entry pressed:', entry.id);
   };
 
   const handleNewChat = () => {
@@ -125,7 +125,7 @@ export default function JournalsScreen() {
   };
 
   const renderEntry = ({ item }: { item: JournalEntry }) => (
-    <JournalEntryCard entry={item} onPress={handleEntryPress} />
+    <JournalEntryCard entry={item} />
   );
 
   const renderEmptyState = () => {
