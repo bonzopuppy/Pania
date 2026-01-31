@@ -3,7 +3,7 @@ import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import VoicesGuideIcon from '@/assets/images/voices-guide.svg';
+import VoicesGuideIcon from '@/assets/images/patterns/voices-guide.svg';
 import { Colors, Fonts, Typography, Spacing, BorderRadius, Palette } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { router } from 'expo-router';

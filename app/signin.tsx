@@ -27,9 +27,9 @@ import { signIn } from '@/services/auth';
 type OAuthProvider = 'google' | 'apple';
 
 // SVG imports
-import PaniaPattern from '@/assets/images/pania-pattern.svg';
-import GoogleLogo from '@/assets/images/Google_logo.svg';
-import AppleLogo from '@/assets/images/apple_logo.svg';
+import PaniaPattern from '@/assets/images/patterns/pania-pattern.svg';
+import GoogleLogo from '@/assets/images/auth/Google_logo.svg';
+import AppleLogo from '@/assets/images/auth/apple_logo.svg';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -85,7 +85,7 @@ export default function SignInScreen() {
       if (result.error) {
         Alert.alert('Error', result.error.message);
       } else if (result.user) {
-        router.replace('/(tabs)');
+        router.replace('/chat');
       }
     } finally {
       setLoading(false);

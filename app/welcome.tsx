@@ -25,10 +25,10 @@ import { Fonts, Typography, Spacing } from '@/constants/theme';
 type OAuthProvider = 'google' | 'apple';
 
 // SVG imports
-import PaniaPattern from '@/assets/images/pania-pattern.svg';
-import GoogleLogo from '@/assets/images/Google_logo.svg';
-import AppleLogo from '@/assets/images/apple_logo.svg';
-import EmailIcon from '@/assets/images/email_icon.svg';
+import PaniaPattern from '@/assets/images/patterns/pania-pattern.svg';
+import GoogleLogo from '@/assets/images/auth/Google_logo.svg';
+import AppleLogo from '@/assets/images/auth/apple_logo.svg';
+import EmailIcon from '@/assets/images/icons/email_icon.svg';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 

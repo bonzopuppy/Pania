@@ -14,8 +14,8 @@ import { useFocusEffect, router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 
 import { Colors, Fonts, Typography, Spacing, BorderRadius, Palette } from '@/constants/theme';
-import AddIcon from '@/assets/images/add.svg';
-import ProfileIcon from '@/assets/images/profile.svg';
+import AddIcon from '@/assets/images/icons/add.svg';
+import ProfileIcon from '@/assets/images/icons/profile.svg';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { getUserId } from '@/services/storage';
 import { getJournalEntries, getTraditionsPerDay, JournalEntry } from '@/services/journal';

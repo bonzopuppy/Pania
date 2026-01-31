@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Fonts, Typography, Spacing } from '@/constants/theme';
 
 // SVG imports
-import CloseIcon from '@/assets/images/close_icon.svg';
+import CloseIcon from '@/assets/images/icons/close_icon.svg';
 
 // Figma design colors - cream/tan gradient
 const FigmaColors = {

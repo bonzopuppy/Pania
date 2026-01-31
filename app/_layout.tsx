@@ -1,6 +1,6 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect } from 'react';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { Stack, router } from 'expo-router';
+import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
 import { useFonts } from 'expo-font';
@@ -20,7 +20,7 @@ import { restoreUserSession } from '@/services/auth';
 SplashScreen.preventAutoHideAsync();
 
 export const unstable_settings = {
-  initialRouteName: 'welcome',
+  initialRouteName: 'index',
 };
 
 // Custom theme that uses Pania colors
@@ -50,8 +50,6 @@ const PaniaDarkTheme = {
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
-  const [isReady, setIsReady] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   const [fontsLoaded] = useFonts({
     'Gambarino-Regular': require('@/assets/fonts/Gambarino-Regular.ttf'),
@@ -62,75 +60,46 @@ export default function RootLayout() {
   });
 
   useEffect(() => {
-    async function prepare() {
-      try {
-        // Try to restore user session from Supabase
-        // This will sync the user's name and onboarded status if they're logged in
-        const { authenticated } = await restoreUserSession();
-        setIsAuthenticated(authenticated);
-      } catch (e) {
-        console.error('Error checking session:', e);
-      } finally {
-        setIsReady(true);
-      }
-    }
-
-    prepare();
+    // Restore session in background
+    restoreUserSession().catch((e) => {
+      console.error('Error restoring session:', e);
+    });
   }, []);
 
   useEffect(() => {
-    if (isReady && fontsLoaded) {
+    if (fontsLoaded) {
       SplashScreen.hideAsync();
     }
-  }, [isReady, fontsLoaded]);
+  }, [fontsLoaded]);
 
-  useEffect(() => {
-    if (isReady && fontsLoaded) {
-      if (isAuthenticated) {
-        // User has active session - go straight to app
-        router.replace('/(tabs)');
-      } else {
-        // No session - show welcome screen with choice
-        router.replace('/welcome');
-      }
-    }
-  }, [isReady, fontsLoaded, isAuthenticated]);
-
-  if (!isReady || !fontsLoaded) {
+  if (!fontsLoaded) {
     return null;
   }
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? PaniaDarkTheme : PaniaLightTheme}>
       <Stack>
+        <Stack.Screen name="index" options={{ headerShown: false }} />
         <Stack.Screen name="welcome" options={{ headerShown: false }} />
         <Stack.Screen name="signin" options={{ headerShown: false, animation: 'slide_from_bottom' }} />
         <Stack.Screen name="signup-email" options={{ headerShown: false, animation: 'slide_from_bottom' }} />
         <Stack.Screen name="terms-of-service" options={{ headerShown: false, animation: 'slide_from_bottom' }} />
         <Stack.Screen name="onboarding-name" options={{ headerShown: false }} />
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="chat" options={{ headerShown: false }} />
         <Stack.Screen
-          name="clarify"
+          name="journals"
           options={{
             headerShown: false,
             animation: 'slide_from_right',
           }}
         />
         <Stack.Screen
-          name="wisdom"
+          name="profile"
           options={{
             headerShown: false,
             animation: 'slide_from_right',
           }}
         />
-        <Stack.Screen
-          name="reflection"
-          options={{
-            headerShown: false,
-            animation: 'slide_from_right',
-          }}
-        />
-        <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
       </Stack>
       <StatusBar style="auto" />
     </ThemeProvider>

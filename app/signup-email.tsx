@@ -26,8 +26,8 @@ import { signUp } from '@/services/auth';
 import { clearAllData } from '@/services/storage';
 
 // SVG imports
-import PaniaPattern from '@/assets/images/pania-pattern.svg';
-import CloseIcon from '@/assets/images/close_icon.svg';
+import PaniaPattern from '@/assets/images/patterns/pania-pattern.svg';
+import CloseIcon from '@/assets/images/icons/close_icon.svg';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
