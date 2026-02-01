@@ -1,6 +1,6 @@
-# Welcome to your Expo app 👋
+# Pania
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A daily companion app that listens to what's happening in your life, asks thoughtful questions, and surfaces wisdom from across spiritual and philosophical traditions — letting you discover which voices resonate with you.
 
 ## Get started
 
@@ -25,15 +25,36 @@ In the output, you'll find options to open the app in a
 
 You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
 
-## Get a fresh project
+## Features
 
-When you're ready, run:
+- 🤔 **Daily Reflection** - Share what's on your mind through the clarify flow
+- 📚 **Wisdom Discovery** - Receive passages from various spiritual and philosophical traditions
+- ✍️ **Personal Reflection** - Write and save your thoughts on the wisdom you receive
+- 📓 **Journal** - Access your saved reflections and wisdom
+- 🔐 **Authentication** - Sign up with email/password, Google, or Apple
+- 👤 **Profile Management** - Manage your account and preferences
 
-```bash
-npm run reset-project
-```
+## Authentication
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+The app supports three sign-in methods:
+- Email and password
+- Google OAuth
+- Apple Sign In
+
+### Setting up OAuth
+
+To enable Google and Apple sign-in, follow the guides:
+- **[OAuth Setup Guide](./OAUTH-SETUP.md)** - Complete OAuth configuration
+- **[TestFlight Quick Start](./TESTFLIGHT-QUICKSTART.md)** - Deploy to TestFlight
+
+**Note:** Email/password authentication works immediately. OAuth requires additional configuration in Google Cloud Console and Apple Developer Portal.
+
+## Architecture
+
+- **Frontend:** React Native with Expo
+- **Backend:** Supabase (PostgreSQL + Auth)
+- **AI:** Anthropic Claude API
+- **Storage:** SecureStore for auth tokens, AsyncStorage for app data
 
 ## Learn more
 

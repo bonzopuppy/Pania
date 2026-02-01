@@ -9,15 +9,46 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router, useFocusEffect } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
+import Svg, { Path } from 'react-native-svg';
 
-import { Colors, Fonts, Typography, Spacing, BorderRadius } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
-import { getUserName, getUserId, clearOnboarding } from '@/services/storage';
-import { signOut } from '@/services/auth';
+import { Fonts, Spacing } from '@/constants/theme';
+import { getUserName, getUserId } from '@/services/storage';
+import { signOut, deleteAccount } from '@/services/auth';
 import { getJournalEntries, JournalEntry } from '@/services/journal';
 import SignupModal from '@/components/SignupModal';
 import { VoicesSection } from '@/components/profile';
+
+// Profile-specific colors from Figma
+const ProfileColors = {
+  backgroundGradient: {
+    top: '#66BAB7',
+    bottom: '#A5DEE4',
+  },
+  cardGradient: {
+    top: 'rgba(255, 255, 255, 0.88)',
+    bottom: 'rgba(255, 255, 255, 0.64)',
+  },
+  text: '#282621',
+  inputDark: 'rgba(40, 38, 33, 0.48)',
+  inputLight: 'rgba(40, 38, 33, 0.08)',
+  inputWhite: 'rgba(255, 255, 255, 0.72)',
+};
+
+// Close button icon component
+function CloseIcon({ color = '#282621' }: { color?: string }) {
+  return (
+    <Svg width={16} height={16} viewBox="0 0 16 16" fill="none">
+      <Path
+        d="M12 4L4 12M4 4L12 12"
+        stroke={color}
+        strokeWidth={1.5}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
 
 export default function ProfileScreen() {
   const [userName, setUserName] = useState<string | null>(null);
@@ -26,8 +57,6 @@ export default function ProfileScreen() {
   const [entries, setEntries] = useState<JournalEntry[]>([]);
 
   const insets = useSafeAreaInsets();
-  const colorScheme = useColorScheme() ?? 'light';
-  const colors = Colors[colorScheme];
   const fonts = Fonts;
 
   const loadProfile = async () => {
@@ -82,17 +111,22 @@ export default function ProfileScreen() {
     );
   };
 
-  const handleChangeName = async () => {
+  const handleDeleteAccount = async () => {
     Alert.alert(
-      'Change Name',
-      'This will take you through the welcome flow again.',
+      'Delete Account',
+      'Are you sure you want to delete your account? This will permanently delete all your data and cannot be undone.',
       [
         { text: 'Cancel', style: 'cancel' },
         {
-          text: 'Continue',
+          text: 'Delete Account',
+          style: 'destructive',
           onPress: async () => {
-            await clearOnboarding();
-            router.replace('/welcome');
+            const { error } = await deleteAccount();
+            if (error) {
+              Alert.alert('Error', 'Failed to delete account. Please try again.');
+            } else {
+              router.replace('/welcome');
+            }
           },
         },
       ]
@@ -100,13 +134,13 @@ export default function ProfileScreen() {
   };
 
   return (
-    <View
+    <LinearGradient
+      colors={[ProfileColors.backgroundGradient.top, ProfileColors.backgroundGradient.bottom]}
       style={[
         styles.container,
         {
-          backgroundColor: colors.background,
           paddingTop: insets.top,
-          paddingBottom: insets.bottom + Spacing.lg,
+          paddingBottom: insets.bottom,
         },
       ]}
     >
@@ -119,29 +153,33 @@ export default function ProfileScreen() {
 
       {/* Header */}
       <View style={styles.header}>
-        <Pressable
-          onPress={handleBack}
-          style={({ pressed }) => [
-            styles.headerButton,
-            { opacity: pressed ? 0.7 : 1 },
-          ]}
-        >
-          <Ionicons name="chevron-back" size={24} color={colors.text} />
-        </Pressable>
-
         <Text
           style={[
             styles.title,
             {
-              color: colors.text,
+              color: ProfileColors.text,
               fontFamily: fonts?.serif,
             },
           ]}
         >
-          Profile
+          My Profile
         </Text>
 
-        <View style={styles.headerButton} />
+        {/* Close Button */}
+        <Pressable
+          onPress={handleBack}
+          style={({ pressed }) => [
+            styles.closeButton,
+            { opacity: pressed ? 0.7 : 1 },
+          ]}
+        >
+          <LinearGradient
+            colors={[ProfileColors.cardGradient.top, ProfileColors.cardGradient.bottom]}
+            style={styles.closeButtonGradient}
+          >
+            <CloseIcon color={ProfileColors.text} />
+          </LinearGradient>
+        </Pressable>
       </View>
 
       {/* Content */}
@@ -150,157 +188,121 @@ export default function ProfileScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* User Info */}
-        <View
-          style={[
-            styles.card,
-            {
-              backgroundColor: colors.backgroundCard,
-              borderColor: colors.border,
-            },
-          ]}
-        >
-          <Text
-            style={[
-              styles.label,
-              {
-                color: colors.textMuted,
-                fontFamily: fonts?.sans,
-              },
-            ]}
-          >
-            Name
-          </Text>
-          <Text
-            style={[
-              styles.value,
-              {
-                color: colors.text,
-                fontFamily: fonts?.serif,
-              },
-            ]}
-          >
-            {userName || 'Not set'}
-          </Text>
-        </View>
-
-        {/* Account Status */}
-        <View
-          style={[
-            styles.card,
-            {
-              backgroundColor: colors.backgroundCard,
-              borderColor: colors.border,
-            },
-          ]}
-        >
-          <Text
-            style={[
-              styles.label,
-              {
-                color: colors.textMuted,
-                fontFamily: fonts?.sans,
-              },
-            ]}
-          >
-            Account
-          </Text>
-          <Text
-            style={[
-              styles.value,
-              {
-                color: colors.text,
-                fontFamily: fonts?.serif,
-              },
-            ]}
-          >
-            {isLoggedIn ? 'Signed in' : 'Guest'}
-          </Text>
-        </View>
-
         {/* Voices Section */}
-        {isLoggedIn && entries.length > 0 && (
+        {entries.length > 0 && (
           <VoicesSection entries={entries} />
         )}
 
-        {/* Actions */}
-        <View style={styles.actionsContainer}>
-          <Pressable
-            onPress={handleChangeName}
-            style={({ pressed }) => [
-              styles.actionButton,
+        {/* Personal Information Section */}
+        <LinearGradient
+          colors={[ProfileColors.cardGradient.top, ProfileColors.cardGradient.bottom]}
+          style={styles.card}
+        >
+          <Text
+            style={[
+              styles.sectionTitle,
               {
-                backgroundColor: colors.backgroundInput,
-                borderColor: colors.border,
-                opacity: pressed ? 0.8 : 1,
+                color: ProfileColors.text,
+                fontFamily: fonts?.serif,
               },
             ]}
           >
+            Personal Information
+          </Text>
+
+          {/* Name field */}
+          <View style={styles.fieldContainer}>
             <Text
               style={[
-                styles.actionButtonText,
+                styles.fieldLabel,
                 {
-                  color: colors.textSecondary,
-                  fontFamily: fonts?.sans,
+                  color: ProfileColors.text,
+                  fontFamily: fonts?.sansMedium,
                 },
               ]}
             >
-              Change name
+              Name
             </Text>
-          </Pressable>
-
-          {isLoggedIn ? (
-            <Pressable
-              onPress={handleSignOut}
-              style={({ pressed }) => [
-                styles.actionButton,
-                {
-                  backgroundColor: colors.backgroundInput,
-                  borderColor: colors.border,
-                  opacity: pressed ? 0.8 : 1,
-                },
-              ]}
-            >
+            <View style={[styles.inputField, styles.inputFieldDark]}>
               <Text
                 style={[
-                  styles.actionButtonText,
-                  {
-                    color: '#ff4444',
-                    fontFamily: fonts?.sans,
-                  },
+                  styles.inputText,
+                  styles.inputTextLight,
+                  { fontFamily: fonts?.sansMedium },
                 ]}
               >
-                Sign out
+                {userName || 'Not set'}
               </Text>
-            </Pressable>
+            </View>
+          </View>
+
+          {/* Sign up/Login or Sign out button */}
+          {isLoggedIn ? (
+            <>
+              <Pressable
+                onPress={handleSignOut}
+                style={({ pressed }) => [
+                  styles.inputField,
+                  styles.inputFieldWhite,
+                  { opacity: pressed ? 0.8 : 1 },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.buttonText,
+                    {
+                      color: ProfileColors.text,
+                      fontFamily: fonts?.sansSemiBold,
+                    },
+                  ]}
+                >
+                  Sign out
+                </Text>
+              </Pressable>
+
+              {/* Delete Account */}
+              <Pressable
+                onPress={handleDeleteAccount}
+                style={({ pressed }) => [
+                  styles.deleteAccountButton,
+                  { opacity: pressed ? 0.6 : 1 },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.deleteAccountText,
+                    { fontFamily: fonts?.sansMedium },
+                  ]}
+                >
+                  Delete Account
+                </Text>
+              </Pressable>
+            </>
           ) : (
             <Pressable
               onPress={() => setShowSignupModal(true)}
               style={({ pressed }) => [
-                styles.actionButton,
-                {
-                  backgroundColor: colors.buttonPrimary,
-                  borderColor: colors.buttonPrimary,
-                  opacity: pressed ? 0.8 : 1,
-                },
+                styles.inputField,
+                styles.inputFieldWhite,
+                { opacity: pressed ? 0.8 : 1 },
               ]}
             >
               <Text
                 style={[
-                  styles.actionButtonText,
+                  styles.buttonText,
                   {
-                    color: colors.buttonText,
-                    fontFamily: fonts?.sans,
+                    color: ProfileColors.text,
+                    fontFamily: fonts?.sansSemiBold,
                   },
                 ]}
               >
-                Sign up / Sign in
+                Sign up/Login
               </Text>
             </Pressable>
           )}
-        </View>
+        </LinearGradient>
       </ScrollView>
-    </View>
+    </LinearGradient>
   );
 }
 
@@ -313,50 +315,93 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-  },
-  headerButton: {
-    padding: Spacing.xs,
-    width: 40,
+    paddingTop: Spacing.lg,
+    paddingBottom: Spacing.md,
   },
   title: {
-    fontSize: Typography.question.fontSize,
+    fontSize: 24,
+    lineHeight: 29,
+  },
+  closeButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 24,
+    overflow: 'hidden',
+  },
+  closeButtonGradient: {
+    width: 32,
+    height: 32,
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   content: {
     flex: 1,
   },
   scrollContent: {
-    paddingHorizontal: Spacing.xl,
-    paddingTop: Spacing.lg,
+    paddingHorizontal: Spacing.md,
+    paddingTop: Spacing.md,
     paddingBottom: Spacing.xl,
-  },
-  card: {
-    padding: Spacing.md,
-    borderRadius: BorderRadius.lg,
-    borderWidth: 1,
-    marginBottom: Spacing.md,
-  },
-  label: {
-    fontSize: Typography.caption.fontSize,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginBottom: Spacing.xs,
-  },
-  value: {
-    fontSize: Typography.body.fontSize,
-  },
-  actionsContainer: {
-    marginTop: Spacing.lg,
     gap: Spacing.md,
   },
-  actionButton: {
-    paddingVertical: Spacing.md,
-    borderRadius: BorderRadius.full,
-    borderWidth: 1.5,
+  card: {
+    padding: Spacing.lg,
+    borderRadius: 24,
+    overflow: 'hidden',
+  },
+  sectionTitle: {
+    fontSize: 20,
+    lineHeight: 25,
+    marginBottom: Spacing.lg,
+  },
+  fieldContainer: {
+    marginBottom: Spacing.md,
+  },
+  fieldLabel: {
+    fontSize: 14,
+    lineHeight: 17.5,
+    marginBottom: Spacing.sm,
+  },
+  inputField: {
+    height: 48,
+    borderRadius: 64,
+    paddingHorizontal: Spacing.md,
+    justifyContent: 'center',
+  },
+  inputFieldDark: {
+    backgroundColor: ProfileColors.inputDark,
+  },
+  inputFieldLight: {
+    backgroundColor: ProfileColors.inputLight,
+  },
+  inputFieldWhite: {
+    backgroundColor: ProfileColors.inputWhite,
     alignItems: 'center',
   },
-  actionButtonText: {
-    fontSize: Typography.button.fontSize,
-    fontWeight: '500',
+  inputText: {
+    fontSize: 16,
+    lineHeight: 21.6,
+  },
+  inputTextLight: {
+    color: '#FFFFFF',
+  },
+  inputTextDark: {
+    color: ProfileColors.text,
+  },
+  buttonText: {
+    fontSize: 16,
+    lineHeight: 21.6,
+    textAlign: 'center',
+  },
+  deleteAccountButton: {
+    marginTop: Spacing.md,
+    alignItems: 'center',
+    paddingVertical: Spacing.sm,
+  },
+  deleteAccountText: {
+    fontSize: 14,
+    lineHeight: 17.5,
+    color: '#D63B2B',
+    textDecorationLine: 'underline',
   },
 });

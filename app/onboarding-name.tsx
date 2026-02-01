@@ -56,7 +56,7 @@ export default function OnboardingNameScreen() {
       try {
         await setUserName(name.trim());
         await setOnboarded();
-        router.replace('/(tabs)');
+        router.replace('/chat');
       } catch (error) {
         console.error('Error saving name:', error);
       }

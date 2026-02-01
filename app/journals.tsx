@@ -13,10 +13,18 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect, router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 
-import { Colors, Fonts, Typography, Spacing, BorderRadius, Palette } from '@/constants/theme';
+import { Fonts, Typography, Spacing, BorderRadius, Palette } from '@/constants/theme';
 import AddIcon from '@/assets/images/icons/add.svg';
 import ProfileIcon from '@/assets/images/icons/profile.svg';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+
+// Fixed colors for journals page (always light background)
+const JournalsColors = {
+  text: '#282621',
+  textSecondary: '#5C554C',
+  textMuted: '#9A948C',
+  buttonPrimary: '#6B635A',
+  buttonText: '#FAF7F3',
+};
 import { getUserId } from '@/services/storage';
 import { getJournalEntries, getTraditionsPerDay, JournalEntry } from '@/services/journal';
 import SignupModal from '@/components/SignupModal';
@@ -31,8 +39,6 @@ export default function JournalsScreen() {
   const [calendarExpanded, setCalendarExpanded] = useState(false);
 
   const insets = useSafeAreaInsets();
-  const colorScheme = useColorScheme() ?? 'light';
-  const colors = Colors[colorScheme];
   const fonts = Fonts;
 
   const loadEntries = async () => {
@@ -136,7 +142,7 @@ export default function JournalsScreen() {
             style={[
               styles.emptyTitle,
               {
-                color: colors.text,
+                color: JournalsColors.text,
                 fontFamily: fonts?.serif,
               },
             ]}
@@ -147,7 +153,7 @@ export default function JournalsScreen() {
             style={[
               styles.emptySubtitle,
               {
-                color: colors.textSecondary,
+                color: JournalsColors.textSecondary,
                 fontFamily: fonts?.sans,
               },
             ]}
@@ -159,7 +165,7 @@ export default function JournalsScreen() {
             style={({ pressed }) => [
               styles.signupButton,
               {
-                backgroundColor: colors.buttonPrimary,
+                backgroundColor: JournalsColors.buttonPrimary,
                 opacity: pressed ? 0.8 : 1,
               },
             ]}
@@ -168,7 +174,7 @@ export default function JournalsScreen() {
               style={[
                 styles.signupButtonText,
                 {
-                  color: colors.buttonText,
+                  color: JournalsColors.buttonText,
                   fontFamily: fonts?.sans,
                 },
               ]}
@@ -186,7 +192,7 @@ export default function JournalsScreen() {
           style={[
             styles.emptyTitle,
             {
-              color: colors.text,
+              color: JournalsColors.text,
               fontFamily: fonts?.serif,
             },
           ]}
@@ -197,7 +203,7 @@ export default function JournalsScreen() {
           style={[
             styles.emptySubtitle,
             {
-              color: colors.textSecondary,
+              color: JournalsColors.textSecondary,
               fontFamily: fonts?.sans,
             },
           ]}
@@ -231,7 +237,7 @@ export default function JournalsScreen() {
           style={[
             styles.title,
             {
-              color: colors.text,
+              color: JournalsColors.text,
               fontFamily: fonts?.serif,
             },
           ]}
@@ -268,7 +274,7 @@ export default function JournalsScreen() {
           style={[
             styles.dateLabel,
             {
-              color: colors.textSecondary,
+              color: JournalsColors.textSecondary,
               fontFamily: fonts?.sans,
             },
           ]}
@@ -280,7 +286,7 @@ export default function JournalsScreen() {
       {/* Content */}
       {isLoading ? (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={colors.textMuted} />
+          <ActivityIndicator size="large" color={JournalsColors.textMuted} />
         </View>
       ) : filteredEntries.length > 0 ? (
         <FlatList

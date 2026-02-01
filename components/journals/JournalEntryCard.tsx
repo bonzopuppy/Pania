@@ -3,13 +3,20 @@ import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
-import { Colors, Fonts, Spacing, Palette } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { Fonts, Spacing, Palette } from '@/constants/theme';
 import { JournalEntry, ConversationData } from '@/services/journal';
 import PromptIcon from '@/assets/images/icons/prompt.svg';
 import MiniPattern from '@/assets/images/patterns/mini-pattern.svg';
 
 type Tradition = 'stoicism' | 'christianity' | 'buddhism' | 'sufism' | 'taoism' | 'judaism';
+
+// Fixed colors for journal cards (always on light background)
+const CardColors = {
+  text: '#282621',
+  textMuted: '#9A948C',
+  buttonPrimary: '#6B635A',
+  backgroundInput: '#FFFDFA',
+};
 
 interface JournalEntryCardProps {
   entry: JournalEntry;
@@ -18,14 +25,12 @@ interface JournalEntryCardProps {
 }
 
 export default function JournalEntryCard({ entry, onPress, onContinue }: JournalEntryCardProps) {
-  const colorScheme = useColorScheme() ?? 'light';
-  const colors = Colors[colorScheme];
   const fonts = Fonts;
 
   const isComplete = !!entry.thinker;
   const traditionColors = isComplete
     ? Palette.traditions[(entry.tradition as Tradition) || 'stoicism'] || Palette.traditions.stoicism
-    : { primary: colors.textMuted, light: colors.backgroundInput };
+    : { primary: CardColors.textMuted, light: CardColors.backgroundInput };
 
   const conversationData = entry.conversation_data as ConversationData | null;
   const hasConversationData = conversationData && conversationData.messages.length > 0;
@@ -66,12 +71,12 @@ export default function JournalEntryCard({ entry, onPress, onContinue }: Journal
           <View style={styles.cardContent}>
             {/* Prompt row */}
             <View style={styles.promptRow}>
-              <PromptIcon width={16} height={16} color={colors.text} />
+              <PromptIcon width={16} height={16} color={CardColors.text} />
               <Text
                 style={[
                   styles.promptText,
                   {
-                    color: colors.text,
+                    color: CardColors.text,
                     fontFamily: fonts?.sansMedium,
                   },
                 ]}
@@ -87,7 +92,7 @@ export default function JournalEntryCard({ entry, onPress, onContinue }: Journal
                 style={[
                   styles.incompleteLabel,
                   {
-                    color: colors.textMuted,
+                    color: CardColors.textMuted,
                     fontFamily: fonts?.sansMedium,
                   },
                 ]}
@@ -98,7 +103,7 @@ export default function JournalEntryCard({ entry, onPress, onContinue }: Journal
                 style={[
                   styles.continueAction,
                   {
-                    color: colors.buttonPrimary,
+                    color: CardColors.buttonPrimary,
                     fontFamily: fonts?.sansSemiBold,
                   },
                 ]}
@@ -133,12 +138,12 @@ export default function JournalEntryCard({ entry, onPress, onContinue }: Journal
         <View style={styles.cardContent}>
           {/* Prompt row */}
           <View style={styles.promptRow}>
-            <PromptIcon width={16} height={16} color={colors.text} />
+            <PromptIcon width={16} height={16} color={CardColors.text} />
             <Text
               style={[
                 styles.promptText,
                 {
-                  color: colors.text,
+                  color: CardColors.text,
                   fontFamily: fonts?.sansMedium,
                 },
               ]}
@@ -174,7 +179,7 @@ export default function JournalEntryCard({ entry, onPress, onContinue }: Journal
               style={[
                 styles.thinkerName,
                 {
-                  color: colors.text,
+                  color: CardColors.text,
                   fontFamily: fonts?.serif,
                 },
               ]}
@@ -188,7 +193,7 @@ export default function JournalEntryCard({ entry, onPress, onContinue }: Journal
               style={[
                 styles.quoteText,
                 {
-                  color: colors.text,
+                  color: CardColors.text,
                   fontFamily: fonts?.serif,
                 },
               ]}

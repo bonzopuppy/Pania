@@ -12,6 +12,12 @@ export const Palette = {
   backgroundCard: '#FAF7F3',     // Card/container background
   backgroundInput: '#FFFDFA',    // Input/interactive elements
 
+  // Journals screen gradient
+  journalsGradient: {
+    top: '#FFD493',      // Peachy orange
+    bottom: '#FFEFC9',   // Light creamy yellow
+  },
+
   // Text
   textPrimary: '#3D3730',        // Primary text (headings, quotes)
   textSecondary: '#5C554C',      // Secondary text (subheadings, body)
