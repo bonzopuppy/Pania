@@ -3,9 +3,11 @@ import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
-import { Colors, Fonts, Typography, Spacing, BorderRadius, Palette } from '@/constants/theme';
+import { Colors, Fonts, Spacing, Palette } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { JournalEntry, ConversationData } from '@/services/journal';
+import PromptIcon from '@/assets/images/icons/prompt.svg';
+import MiniPattern from '@/assets/images/patterns/mini-pattern.svg';
 
 type Tradition = 'stoicism' | 'christianity' | 'buddhism' | 'sufism' | 'taoism' | 'judaism';
 
@@ -27,15 +29,6 @@ export default function JournalEntryCard({ entry, onPress, onContinue }: Journal
 
   const conversationData = entry.conversation_data as ConversationData | null;
   const hasConversationData = conversationData && conversationData.messages.length > 0;
-
-  const formatTime = (dateString: string): string => {
-    const date = new Date(dateString);
-    return date.toLocaleTimeString('en-US', {
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true,
-    });
-  };
 
   const handlePress = () => {
     if (onPress) {
@@ -65,33 +58,21 @@ export default function JournalEntryCard({ entry, onPress, onContinue }: Journal
         ]}
       >
         <BlurView intensity={20} tint="light" style={styles.blurView}>
+          {/* Match calendar background color */}
           <LinearGradient
-            colors={['rgba(255,255,255,0.75)', 'rgba(255,255,255,0.55)']}
+            colors={['rgba(255,251,245,0.92)', 'rgba(255,249,240,0.80)']}
             style={StyleSheet.absoluteFill}
           />
           <View style={styles.cardContent}>
-            {/* Dashed border indicator for incomplete */}
-            <View style={[styles.incompleteIndicator, { borderColor: colors.textMuted }]} />
-
-            {/* Prompt section */}
-            <View style={styles.promptSection}>
-              <Text
-                style={[
-                  styles.promptLabel,
-                  {
-                    color: colors.textMuted,
-                    fontFamily: fonts?.sansSemiBold,
-                  },
-                ]}
-              >
-                PROMPT
-              </Text>
+            {/* Prompt row */}
+            <View style={styles.promptRow}>
+              <PromptIcon width={16} height={16} color={colors.text} />
               <Text
                 style={[
                   styles.promptText,
                   {
                     color: colors.text,
-                    fontFamily: fonts?.sans,
+                    fontFamily: fonts?.sansMedium,
                   },
                 ]}
                 numberOfLines={2}
@@ -100,14 +81,14 @@ export default function JournalEntryCard({ entry, onPress, onContinue }: Journal
               </Text>
             </View>
 
-            {/* Continue indicator */}
-            <View style={styles.continueSection}>
+            {/* Incomplete thinker section */}
+            <View style={[styles.thinkerContainer, styles.incompleteContainer]}>
               <Text
                 style={[
-                  styles.continueLabel,
+                  styles.incompleteLabel,
                   {
                     color: colors.textMuted,
-                    fontFamily: fonts?.sans,
+                    fontFamily: fonts?.sansMedium,
                   },
                 ]}
               >
@@ -144,38 +125,21 @@ export default function JournalEntryCard({ entry, onPress, onContinue }: Journal
       ]}
     >
       <BlurView intensity={20} tint="light" style={styles.blurView}>
+        {/* Match calendar background color */}
         <LinearGradient
-          colors={['rgba(255,255,255,0.88)', 'rgba(255,255,255,0.64)']}
+          colors={['rgba(255,251,245,0.92)', 'rgba(255,249,240,0.80)']}
           style={StyleSheet.absoluteFill}
         />
         <View style={styles.cardContent}>
-          {/* Tradition indicator bar */}
-          <View
-            style={[
-              styles.traditionIndicator,
-              { backgroundColor: traditionColors.primary },
-            ]}
-          />
-
-          {/* Prompt section (top) */}
-          <View style={styles.promptSection}>
-            <Text
-              style={[
-                styles.promptLabel,
-                {
-                  color: colors.textMuted,
-                  fontFamily: fonts?.sansSemiBold,
-                },
-              ]}
-            >
-              PROMPT
-            </Text>
+          {/* Prompt row */}
+          <View style={styles.promptRow}>
+            <PromptIcon width={16} height={16} color={colors.text} />
             <Text
               style={[
                 styles.promptText,
                 {
                   color: colors.text,
-                  fontFamily: fonts?.sans,
+                  fontFamily: fonts?.sansMedium,
                 },
               ]}
               numberOfLines={2}
@@ -184,26 +148,45 @@ export default function JournalEntryCard({ entry, onPress, onContinue }: Journal
             </Text>
           </View>
 
-          {/* Divider */}
-          <View style={[styles.divider, { backgroundColor: colors.divider }]} />
+          {/* Thinker container with gradient overlay - pure white background */}
+          <View style={styles.thinkerContainer}>
+            {/* Tradition gradient overlay with smooth transition */}
+            <LinearGradient
+              colors={[
+                `${traditionColors.primary}40`, // 25% opacity at top
+                `${traditionColors.primary}20`, // 12% opacity
+                `${traditionColors.primary}08`, // 3% opacity
+                'transparent',
+              ]}
+              locations={[0, 0.15, 0.35, 0.55]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 0, y: 1 }}
+              style={styles.traditionGradient}
+            />
 
-          {/* Thinker/Passage section (bottom) */}
-          <View style={styles.voiceSection}>
+            {/* Tradition icon in top-right */}
+            <View style={styles.traditionIconContainer}>
+              <MiniPattern width={16} height={16} color={traditionColors.primary} />
+            </View>
+
+            {/* Thinker name */}
             <Text
               style={[
                 styles.thinkerName,
                 {
-                  color: traditionColors.primary,
-                  fontFamily: fonts?.sansSemiBold,
+                  color: colors.text,
+                  fontFamily: fonts?.serif,
                 },
               ]}
               numberOfLines={1}
             >
-              {entry.thinker?.toUpperCase() || 'UNKNOWN'}
+              {entry.thinker}
             </Text>
+
+            {/* Quote text */}
             <Text
               style={[
-                styles.passagePreview,
+                styles.quoteText,
                 {
                   color: colors.text,
                   fontFamily: fonts?.serif,
@@ -231,66 +214,63 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   cardContent: {
-    padding: Spacing.md,
+    paddingTop: Spacing.md,
+    paddingHorizontal: Spacing.md,
+    paddingBottom: Spacing.sm,
+    gap: Spacing.md,
   },
-  traditionIndicator: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 3,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-  },
-  incompleteIndicator: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 3,
-    borderTopWidth: 2,
-    borderStyle: 'dashed',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-  },
-  promptSection: {
-    marginTop: Spacing.xs,
-    marginBottom: Spacing.sm,
-  },
-  promptLabel: {
-    fontSize: 10,
-    letterSpacing: 0.5,
-    marginBottom: 4,
+  promptRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: Spacing.sm,
   },
   promptText: {
-    fontSize: Typography.body.fontSize,
-    lineHeight: Typography.body.lineHeight,
+    flex: 1,
+    fontSize: 14,
+    lineHeight: 20,
   },
-  divider: {
-    height: 1,
-    marginVertical: Spacing.sm,
+  thinkerContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 8,
+    padding: Spacing.md,
+    marginHorizontal: -Spacing.sm,
+    overflow: 'hidden',
   },
-  voiceSection: {
+  incompleteContainer: {
+    borderWidth: 1,
+    borderStyle: 'dashed',
+    borderColor: 'rgba(0,0,0,0.15)',
+    backgroundColor: 'transparent',
+  },
+  traditionGradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: 8,
+  },
+  traditionIconContainer: {
+    position: 'absolute',
+    top: Spacing.sm,
+    right: Spacing.sm,
   },
   thinkerName: {
-    fontSize: Typography.caption.fontSize,
-    letterSpacing: 0.5,
-    marginBottom: 4,
+    fontSize: 20,
+    lineHeight: 26,
+    marginBottom: 9,
   },
-  passagePreview: {
-    fontSize: Typography.body.fontSize,
-    lineHeight: Typography.body.lineHeight,
+  quoteText: {
+    fontSize: 16,
+    lineHeight: 22,
   },
-  continueSection: {
-    paddingTop: Spacing.sm,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(0,0,0,0.08)',
-  },
-  continueLabel: {
-    fontSize: Typography.caption.fontSize,
+  incompleteLabel: {
+    fontSize: 14,
+    lineHeight: 20,
     marginBottom: 2,
   },
   continueAction: {
-    fontSize: Typography.label.fontSize,
+    fontSize: 14,
+    lineHeight: 20,
   },
 });

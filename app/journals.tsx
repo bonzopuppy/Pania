@@ -367,7 +367,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   listContent: {
-    paddingHorizontal: Spacing.xl,
+    paddingHorizontal: Spacing.md,
     paddingBottom: Spacing.xl,
   },
   emptyContainer: {
