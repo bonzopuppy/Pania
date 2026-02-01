@@ -6,6 +6,7 @@ import {
   Pressable,
   Alert,
   ScrollView,
+  Modal,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router, useFocusEffect } from 'expo-router';
@@ -54,6 +55,7 @@ export default function ProfileScreen() {
   const [userName, setUserName] = useState<string | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [showSignupModal, setShowSignupModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [entries, setEntries] = useState<JournalEntry[]>([]);
 
   const insets = useSafeAreaInsets();
@@ -111,26 +113,18 @@ export default function ProfileScreen() {
     );
   };
 
-  const handleDeleteAccount = async () => {
-    Alert.alert(
-      'Delete Account',
-      'Are you sure you want to delete your account? This will permanently delete all your data and cannot be undone.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete Account',
-          style: 'destructive',
-          onPress: async () => {
-            const { error } = await deleteAccount();
-            if (error) {
-              Alert.alert('Error', 'Failed to delete account. Please try again.');
-            } else {
-              router.replace('/welcome');
-            }
-          },
-        },
-      ]
-    );
+  const handleDeleteAccount = () => {
+    setShowDeleteModal(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    setShowDeleteModal(false);
+    const { error } = await deleteAccount();
+    if (error) {
+      Alert.alert('Error', 'Failed to delete account. Please try again.');
+    } else {
+      router.replace('/welcome');
+    }
   };
 
   return (
@@ -150,6 +144,79 @@ export default function ProfileScreen() {
         onSuccess={handleSignupSuccess}
         mode="profile"
       />
+
+      {/* Delete Account Confirmation Modal */}
+      <Modal
+        visible={showDeleteModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowDeleteModal(false)}
+      >
+        <Pressable
+          style={styles.deleteModalOverlay}
+          onPress={() => setShowDeleteModal(false)}
+        >
+          <Pressable
+            style={styles.deleteModalContainer}
+            onPress={(e) => e.stopPropagation()}
+          >
+            <Text
+              style={[
+                styles.deleteModalTitle,
+                { fontFamily: fonts?.serif },
+              ]}
+            >
+              Delete Account?
+            </Text>
+            <Text
+              style={[
+                styles.deleteModalMessage,
+                { fontFamily: fonts?.sans },
+              ]}
+            >
+              This will permanently delete all your journal entries and account data. This action cannot be undone.
+            </Text>
+            <View style={styles.deleteModalButtons}>
+              <Pressable
+                style={({ pressed }) => [
+                  styles.deleteModalButton,
+                  styles.deleteModalCancelButton,
+                  { opacity: pressed ? 0.7 : 1 },
+                ]}
+                onPress={() => setShowDeleteModal(false)}
+              >
+                <Text
+                  style={[
+                    styles.deleteModalButtonText,
+                    styles.deleteModalCancelButtonText,
+                    { fontFamily: fonts?.sansSemiBold },
+                  ]}
+                >
+                  Cancel
+                </Text>
+              </Pressable>
+              <Pressable
+                style={({ pressed }) => [
+                  styles.deleteModalButton,
+                  styles.deleteModalDeleteButton,
+                  { opacity: pressed ? 0.7 : 1 },
+                ]}
+                onPress={handleConfirmDelete}
+              >
+                <Text
+                  style={[
+                    styles.deleteModalButtonText,
+                    styles.deleteModalDeleteButtonText,
+                    { fontFamily: fonts?.sansSemiBold },
+                  ]}
+                >
+                  Delete Account
+                </Text>
+              </Pressable>
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
 
       {/* Header */}
       <View style={styles.header}>
@@ -403,5 +470,64 @@ const styles = StyleSheet.create({
     lineHeight: 17.5,
     color: '#D63B2B',
     textDecorationLine: 'underline',
+  },
+  deleteModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: Spacing.xl,
+  },
+  deleteModalContainer: {
+    width: '100%',
+    maxWidth: 300,
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    borderRadius: 16,
+    padding: Spacing.lg,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  deleteModalTitle: {
+    fontSize: 20,
+    lineHeight: 25,
+    textAlign: 'center',
+    color: '#282621',
+    marginBottom: Spacing.sm,
+  },
+  deleteModalMessage: {
+    fontSize: 14,
+    lineHeight: 18.9,
+    textAlign: 'center',
+    color: 'rgba(40, 38, 33, 0.64)',
+    marginBottom: Spacing.lg,
+  },
+  deleteModalButtons: {
+    gap: 10,
+  },
+  deleteModalButton: {
+    height: 48,
+    borderRadius: 100,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  deleteModalCancelButton: {
+    backgroundColor: 'rgba(120, 120, 128, 0.16)',
+  },
+  deleteModalDeleteButton: {
+    backgroundColor: 'rgba(214, 59, 43, 0.16)',
+  },
+  deleteModalButtonText: {
+    fontSize: 17,
+    lineHeight: 22,
+    textAlign: 'center',
+  },
+  deleteModalCancelButtonText: {
+    color: '#000000',
+  },
+  deleteModalDeleteButtonText: {
+    color: '#D63B2B',
   },
 });
