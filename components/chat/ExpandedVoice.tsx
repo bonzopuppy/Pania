@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useRef, useCallback } from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { captureRef } from 'react-native-view-shot';
+import * as Sharing from 'expo-sharing';
 import { Colors, Fonts, Typography, Spacing, BorderRadius, Palette } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { Passage } from '@/services/ai';
@@ -10,7 +12,7 @@ type Tradition = 'stoicism' | 'christianity' | 'buddhism' | 'sufism' | 'taoism' 
 
 const FigmaColors = {
   text: '#282621',
-  textSecondary: 'rgba(40, 38, 33, 0.6)',
+  textSecondary: '#282520',
 };
 
 // Helper to convert hex to rgba for gradient
@@ -39,142 +41,165 @@ export default function ExpandedVoice({
   const colorScheme = useColorScheme() ?? 'light';
   const colors = Colors[colorScheme];
   const fonts = Fonts;
+  const captureCardRef = useRef<View>(null);
 
   const traditionColors = Palette.traditions[voice.tradition as Tradition] || Palette.traditions.stoicism;
 
+  const handleShare = useCallback(async () => {
+    try {
+      const uri = await captureRef(captureCardRef, {
+        format: 'png',
+        quality: 1,
+      });
+      await Sharing.shareAsync(uri, {
+        mimeType: 'image/png',
+        dialogTitle: 'Shared from Pania',
+      });
+    } catch {
+      // User cancelled or share failed
+    }
+  }, [voice]);
+
+  // Shared card content renderer (used by both display and capture)
+  const renderCardContent = (showBranding = false) => (
+    <>
+      {/* Background with gradient */}
+      <View style={StyleSheet.absoluteFill}>
+        <View style={[styles.backgroundBase, { backgroundColor: '#FFFFFF' }]} />
+        <LinearGradient
+          colors={[hexToRgba(traditionColors.primary, 0.4), 'rgba(255, 255, 255, 0)']}
+          style={styles.gradientOverlay}
+          start={{ x: 0.5, y: 0 }}
+          end={{ x: 0.5, y: 0.325 }}
+        />
+      </View>
+
+      {/* Mini-pattern icon in top right */}
+      <View style={styles.iconContainer}>
+        <MiniPattern width={16} height={16} color={traditionColors.primary} />
+      </View>
+
+      <View style={styles.content}>
+        {/* Thinker name */}
+        <Text
+          style={[
+            styles.thinkerName,
+            {
+              color: FigmaColors.text,
+              fontFamily: fonts?.serif,
+            },
+          ]}
+        >
+          {voice.thinker}
+        </Text>
+
+        {/* Thinker role */}
+        <Text
+          style={[
+            styles.thinkerInfo,
+            {
+              color: FigmaColors.textSecondary,
+              fontFamily: fonts?.sansMedium,
+            },
+          ]}
+        >
+          {voice.role}
+        </Text>
+
+        {/* Quote */}
+        <Text
+          style={[
+            styles.quoteText,
+            {
+              color: FigmaColors.textSecondary,
+              fontFamily: fonts?.serif,
+            },
+          ]}
+        >
+          {voice.text}
+        </Text>
+
+        {/* Source */}
+        {voice.source && (
+          <Text
+            style={[
+              styles.sourceText,
+              {
+                color: FigmaColors.textSecondary,
+                fontFamily: fonts?.sansMedium,
+              },
+            ]}
+          >
+            – {voice.source}
+          </Text>
+        )}
+
+        {/* Context */}
+        <Text
+          style={[
+            styles.contextText,
+            {
+              color: FigmaColors.textSecondary,
+              fontFamily: fonts?.sansMedium,
+            },
+          ]}
+        >
+          {voice.context || 'This wisdom has been shared across generations.'}
+        </Text>
+      </View>
+
+      {showBranding && (
+        <View style={styles.brandingFooter}>
+          <View style={styles.brandingDivider} />
+          <View style={styles.brandingRow}>
+            <Text
+              style={[
+                styles.brandingText,
+                { fontFamily: fonts?.serif },
+              ]}
+            >
+              Shared on{' '}
+              <Text style={{ color: 'rgba(40, 38, 33, 0.55)' }}>Pania</Text>
+            </Text>
+            <Text
+              style={[
+                styles.brandingUrl,
+                { fontFamily: fonts?.sansMedium },
+              ]}
+            >
+              pania.world
+            </Text>
+          </View>
+        </View>
+      )}
+    </>
+  );
+
   return (
     <View style={styles.container}>
-      {/* Card */}
+      {/* Hidden off-screen card for capture (no buttons) */}
+      <View style={styles.captureWrapper} pointerEvents="none">
+        <View ref={captureCardRef} collapsable={false} style={styles.captureCard}>
+          {renderCardContent(true)}
+        </View>
+      </View>
+
+      {/* Visible card with buttons */}
       <View style={styles.card}>
-        {/* Background with gradient */}
-        <View style={StyleSheet.absoluteFill}>
-          <View style={[styles.backgroundBase, { backgroundColor: '#FFFFFF' }]} />
-          <LinearGradient
-            colors={[hexToRgba(traditionColors.primary, 0.4), 'rgba(255, 255, 255, 0)']}
-            style={styles.gradientOverlay}
-            start={{ x: 0.5, y: 0 }}
-            end={{ x: 0.5, y: 0.325 }}
-          />
-        </View>
+        {renderCardContent()}
 
-        {/* Mini-pattern icon in top right */}
-        <View style={styles.iconContainer}>
-          <MiniPattern width={16} height={16} color={traditionColors.primary} />
-        </View>
-
-        <View style={styles.content}>
-          {/* Thinker name */}
-          <Text
-            style={[
-              styles.thinkerName,
-              {
-                color: FigmaColors.text,
-                fontFamily: fonts?.serif,
-              },
-            ]}
-          >
-            {voice.thinker}
-          </Text>
-
-          {/* Thinker info */}
-          <Text
-            style={[
-              styles.thinkerInfo,
-              {
-                color: FigmaColors.text,
-                fontFamily: fonts?.sansMedium,
-              },
-            ]}
-          >
-            {voice.role}
-          </Text>
-
-          {/* Quote */}
-          <Text
-            style={[
-              styles.quoteText,
-              {
-                color: FigmaColors.text,
-                fontFamily: fonts?.serif,
-              },
-            ]}
-          >
-            {voice.text}
-          </Text>
-
-          {/* Source */}
-          {voice.source && (
-            <Text
-              style={[
-                styles.sourceText,
-                {
-                  color: FigmaColors.text,
-                  fontFamily: fonts?.sansMedium,
-                },
-              ]}
-            >
-              – {voice.source}
-            </Text>
-          )}
-
-          {/* Context */}
-          <Text
-            style={[
-              styles.contextText,
-              {
-                color: FigmaColors.text,
-                fontFamily: fonts?.sansMedium,
-              },
-            ]}
-          >
-            {voice.context || 'This wisdom has been shared across generations.'}
-          </Text>
-
-          {/* Dotted Divider */}
-          <View style={styles.dottedDivider}>
-            {Array.from({ length: 30 }).map((_, i) => (
-              <View key={i} style={styles.dot} />
-            ))}
-          </View>
-
-          {/* Reflection Question Section */}
-          <View style={styles.reflectionSection}>
-            <Text
-              style={[
-                styles.reflectionLabel,
-                {
-                  color: FigmaColors.text,
-                  fontFamily: fonts?.sansMedium,
-                },
-              ]}
-            >
-              A question to sit with:
-            </Text>
-
-            <Text
-              style={[
-                styles.reflectionQuestion,
-                {
-                  color: FigmaColors.text,
-                  fontFamily: fonts?.sansMedium,
-                },
-              ]}
-            >
-              {voice.reflectionQuestion || 'How does this resonate with your situation?'}
-            </Text>
-          </View>
-
+        <View style={styles.buttonsArea}>
           {/* See another voice button */}
           <Pressable
             onPress={onSeeAnother}
             style={({ pressed }) => [
-              styles.seeAnotherButton,
-              pressed && styles.seeAnotherButtonPressed,
+              styles.pillButton,
+              pressed && styles.pillButtonPressed,
             ]}
           >
             <Text
               style={[
-                styles.seeAnotherText,
+                styles.pillButtonText,
                 {
                   color: FigmaColors.text,
                   fontFamily: fonts?.sansSemiBold,
@@ -182,6 +207,28 @@ export default function ExpandedVoice({
               ]}
             >
               See another voice
+            </Text>
+          </Pressable>
+
+          {/* Share button */}
+          <Pressable
+            onPress={handleShare}
+            style={({ pressed }) => [
+              styles.pillButton,
+              styles.shareButton,
+              pressed && styles.pillButtonPressed,
+            ]}
+          >
+            <Text
+              style={[
+                styles.pillButtonText,
+                {
+                  color: FigmaColors.text,
+                  fontFamily: fonts?.sansSemiBold,
+                },
+              ]}
+            >
+              Share
             </Text>
           </Pressable>
         </View>
@@ -196,10 +243,21 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.md,
     marginHorizontal: Spacing.md,
   },
+  // Off-screen capture card
+  captureWrapper: {
+    position: 'absolute',
+    left: -9999,
+    opacity: 0,
+  },
+  captureCard: {
+    width: 361,
+    borderRadius: 24,
+    overflow: 'hidden',
+  },
+  // Visible card
   card: {
     borderRadius: 24,
     overflow: 'hidden',
-    // Drop shadow
     shadowColor: '#000000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.08,
@@ -228,6 +286,10 @@ const styles = StyleSheet.create({
   content: {
     padding: 24,
   },
+  buttonsArea: {
+    paddingHorizontal: 24,
+    paddingBottom: 24,
+  },
   thinkerName: {
     fontSize: 32,
     lineHeight: 40,
@@ -242,7 +304,7 @@ const styles = StyleSheet.create({
   },
   quoteText: {
     fontSize: 16,
-    lineHeight: 22,
+    lineHeight: 21.6,
     marginBottom: 16,
   },
   sourceText: {
@@ -253,48 +315,49 @@ const styles = StyleSheet.create({
   },
   contextText: {
     fontSize: 16,
-    lineHeight: 22,
-    marginBottom: 24,
+    lineHeight: 21.6,
+    marginBottom: 0,
   },
-  dottedDivider: {
+  brandingFooter: {
+    paddingBottom: 16,
+  },
+  brandingDivider: {
+    height: 1,
+    backgroundColor: 'rgba(40, 38, 33, 0.1)',
+    marginHorizontal: 24,
+    marginBottom: 12,
+  },
+  brandingRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 24,
-    opacity: 0.2,
+    marginHorizontal: 24,
   },
-  dot: {
-    width: 3,
-    height: 3,
-    borderRadius: 1.5,
-    backgroundColor: FigmaColors.text,
-  },
-  reflectionSection: {
-    gap: 8,
-    marginBottom: 24,
-  },
-  reflectionLabel: {
+  brandingText: {
     fontSize: 14,
-    lineHeight: 19,
-    opacity: 0.6,
+    color: 'rgba(40, 38, 33, 0.4)',
   },
-  reflectionQuestion: {
-    fontSize: 16,
-    lineHeight: 22,
+  brandingUrl: {
+    fontSize: 14,
+    color: 'rgba(40, 38, 33, 0.4)',
   },
-  seeAnotherButton: {
+  pillButton: {
     height: 40,
     borderRadius: 64,
     borderWidth: 1,
-    borderColor: 'rgba(40, 38, 33, 0.16)',
+    borderColor: FigmaColors.text,
+    backgroundColor: 'rgba(255, 255, 255, 0.72)',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  seeAnotherButtonPressed: {
-    backgroundColor: 'rgba(40, 38, 33, 0.04)',
+  shareButton: {
+    marginTop: 8,
   },
-  seeAnotherText: {
+  pillButtonPressed: {
+    backgroundColor: 'rgba(255, 255, 255, 0.5)',
+  },
+  pillButtonText: {
     fontSize: 14,
-    lineHeight: 19,
+    lineHeight: 18.9,
   },
 });

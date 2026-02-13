@@ -1,12 +1,16 @@
 import React, { useRef, useEffect } from 'react';
-import { ScrollView, View, StyleSheet, Keyboard, Pressable, Platform } from 'react-native';
-import { Spacing } from '@/constants/theme';
+import { ScrollView, View, Text, StyleSheet, Keyboard, Pressable, Platform } from 'react-native';
+import { Spacing, Fonts } from '@/constants/theme';
 import { ChatMessage } from '@/contexts/ChatContext';
 import { Passage } from '@/services/ai';
 import ChatBubble from './ChatBubble';
 import VoiceCardsRow from './VoiceCardsRow';
 import ExpandedVoice from './ExpandedVoice';
 import PromptChips from './PromptChips';
+
+const FigmaColors = {
+  text: '#282621',
+};
 
 interface ChatMessageListProps {
   messages: ChatMessage[];
@@ -37,6 +41,7 @@ export default function ChatMessageList({
   isSaved = false,
   bottomInset = 0,
 }: ChatMessageListProps) {
+  const fonts = Fonts;
   const scrollViewRef = useRef<ScrollView>(null);
 
   // Auto-scroll to bottom when new messages arrive
@@ -61,15 +66,42 @@ export default function ChatMessageList({
 
     // Handle selected_voice specially
     if (message.type === 'selected_voice') {
+      const reflectionText = message.voice.reflectionQuestion || 'How does this resonate with your situation?';
       return (
-        <ExpandedVoice
-          key={message.id}
-          voice={message.voice}
-          onSeeAnother={onSeeAnother}
-          onSave={onSave}
-          isSaving={isSaving}
-          isSaved={isSaved}
-        />
+        <View key={message.id}>
+          <ExpandedVoice
+            voice={message.voice}
+            onSeeAnother={onSeeAnother}
+            onSave={onSave}
+            isSaving={isSaving}
+            isSaved={isSaved}
+          />
+          {/* Follow-up question outside the card */}
+          <View style={styles.followUpContainer}>
+            <Text
+              style={[
+                styles.followUpLabel,
+                {
+                  color: FigmaColors.text,
+                  fontFamily: fonts?.sans,
+                },
+              ]}
+            >
+              A question to sit with:
+            </Text>
+            <Text
+              style={[
+                styles.followUpText,
+                {
+                  color: FigmaColors.text,
+                  fontFamily: fonts?.sans,
+                },
+              ]}
+            >
+              {reflectionText}
+            </Text>
+          </View>
+        </View>
       );
     }
 
@@ -123,5 +155,18 @@ const styles = StyleSheet.create({
   contentContainer: {
     paddingTop: Spacing.xxl,
     paddingHorizontal: Spacing.lg,
+  },
+  followUpContainer: {
+    marginHorizontal: Spacing.md,
+    marginBottom: Spacing.md,
+  },
+  followUpLabel: {
+    fontSize: 16,
+    lineHeight: 21.6,
+    marginBottom: 4,
+  },
+  followUpText: {
+    fontSize: 16,
+    lineHeight: 21.6,
   },
 });

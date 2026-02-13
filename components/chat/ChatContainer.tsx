@@ -188,6 +188,50 @@ export default function ChatContainer({ onOpenJournals, restoreEntryId }: ChatCo
     };
   }, []);
 
+  // Auto-save conversation data after meaningful state changes.
+  // This runs AFTER render, so getConversationData() has the correct updated state.
+  // Fixes: voice selection, reflections, and acknowledgments not being persisted.
+  useEffect(() => {
+    if (!state.journalEntryId) return;
+
+    // Only save in stable states (not during API calls/loading)
+    const savableStages: ChatStage[] = [
+      'awaiting_response',
+      'showing_voices',
+      'voice_selected',
+      'reflection_acknowledged',
+    ];
+    if (!savableStages.includes(state.stage)) return;
+
+    const timer = setTimeout(async () => {
+      try {
+        const conversationData = getConversationData();
+        const updates: Partial<CreateJournalEntryParams> = {
+          userInput: state.userInput,
+          clarification: state.clarification || undefined,
+          conversationData,
+        };
+
+        // Include voice metadata when a voice is selected
+        if (state.selectedVoice) {
+          updates.tradition = state.selectedVoice.tradition;
+          updates.thinker = state.selectedVoice.thinker;
+          updates.passageText = state.selectedVoice.text;
+          updates.source = state.selectedVoice.source;
+          updates.context = state.selectedVoice.context;
+          updates.reflectionQuestion = state.selectedVoice.reflectionQuestion;
+        }
+
+        await updateJournalEntry(state.journalEntryId!, updates);
+        console.log('Auto-saved conversation:', state.journalEntryId, 'stage:', state.stage);
+      } catch (error) {
+        console.error('Failed to auto-save conversation:', error);
+      }
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [state.messages.length, state.stage, state.selectedVoice, state.journalEntryId]);
+
   // Handle stage transitions - API calls
   useEffect(() => {
     if (state.stage === 'loading_clarify') {
@@ -259,8 +303,6 @@ export default function ChatContainer({ onOpenJournals, restoreEntryId }: ChatCo
       createInitialEntry(text);
     } else if (state.stage === 'awaiting_response') {
       submitUserResponse(text);
-      // Update entry with clarification (after a brief delay to let context update)
-      setTimeout(() => updateEntryConversation(), 100);
     } else if (state.stage === 'showing_voices') {
       // User is asking about the cards or providing more context
       // Treat as additional clarification and fetch new voices

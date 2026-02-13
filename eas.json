@@ -11,24 +11,26 @@
       }
     },
     "preview": {
-      "distribution": "internal",
+      "distribution": "store",
       "ios": {
-        "simulator": false,
-        "buildNumber": "1"
+        "simulator": false
+      }
+    },
+    "production": {}
+  },
+  "submit": {
+    "preview": {
+      "ios": {
+        "appleId": "zetastudios.temp@gmail.com",
+        "ascAppId": "6758580445",
+        "appleTeamId": "X77KH9H7BC"
       }
     },
     "production": {
       "ios": {
-        "buildNumber": "1"
-      }
-    }
-  },
-  "submit": {
-    "production": {
-      "ios": {
-        "appleId": "your-apple-id@example.com",
-        "ascAppId": "placeholder",
-        "appleTeamId": "placeholder"
+        "appleId": "zetastudios.temp@gmail.com",
+        "ascAppId": "6758580445",
+        "appleTeamId": "X77KH9H7BC"
       }
     }
   }

@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pania — Wisdom of the past, for your present</title>
+  <meta name="description" content="A daily companion that listens to what's happening in your life, asks thoughtful questions, and surfaces wisdom from across spiritual and philosophical traditions.">
+  <meta property="og:title" content="Pania">
+  <meta property="og:description" content="Wisdom of the past, for your present.">
+  <meta property="og:image" content="./images/splash-icon.png">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://pania.world">
+  <link rel="icon" type="image/png" href="./images/splash-icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    @font-face {
+      font-family: 'Gambarino';
+      src: url('./fonts/Gambarino-Regular.ttf') format('truetype');
+      font-weight: normal;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    *, *::before, *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Figtree', sans-serif;
+      background: linear-gradient(180deg, #FFD493 0%, #FFEFC9 100%);
+      color: #6A4F3E;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* Top section: centered content */
+    .content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 48px 24px 32px;
+    }
+
+    .logo-pattern {
+      width: 100px;
+      height: 100px;
+      margin-bottom: 12px;
+      animation: revolve 120s linear infinite;
+    }
+
+    @keyframes revolve {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    .wordmark {
+      font-family: 'Gambarino', serif;
+      font-size: 64px;
+      font-weight: 400;
+      color: #6A4F3E;
+      margin-bottom: 16px;
+      letter-spacing: -0.5px;
+    }
+
+    .tagline {
+      font-family: 'Gambarino', serif;
+      font-size: 22px;
+      line-height: 1.5;
+      color: #6A4F3E;
+      opacity: 0.7;
+      margin-bottom: 24px;
+    }
+
+    .description {
+      font-family: 'Figtree', sans-serif;
+      font-weight: 400;
+      font-size: 16px;
+      line-height: 1.65;
+      color: #6A4F3E;
+      opacity: 0.55;
+      margin-bottom: 36px;
+      max-width: 420px;
+    }
+
+    .download-buttons {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .download-buttons a {
+      display: inline-block;
+      transition: opacity 0.2s ease;
+    }
+
+    .download-buttons a:hover {
+      opacity: 0.8;
+    }
+
+    .download-buttons img {
+      height: 48px;
+      width: auto;
+    }
+
+    .content-footer {
+      margin-top: 28px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .content-footer-text,
+    .content-footer-sep,
+    .content-footer-link {
+      font-family: 'Figtree', sans-serif;
+      font-weight: 500;
+      font-size: 13px;
+      color: #6A4F3E;
+      opacity: 0.35;
+    }
+
+    .content-footer-link {
+      text-decoration: none;
+      transition: opacity 0.2s ease;
+    }
+
+    .content-footer-link:hover {
+      opacity: 0.6;
+    }
+
+    /* Bottom: horizontal scrolling cards */
+    .cards-strip {
+      flex: 0 0 auto;
+      width: 100%;
+      overflow: hidden;
+      padding: 8px 0 40px;
+      mask-image: linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%);
+      -webkit-mask-image: linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%);
+    }
+
+    .cards-track {
+      display: flex;
+      width: 3840px; /* 12 cards × (300px + 20px margin) */
+      animation: scroll-left 45s linear infinite;
+    }
+
+    @keyframes scroll-left {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-1920px); }
+    }
+
+    .card {
+      border-radius: 20px;
+      overflow: hidden;
+      position: relative;
+      flex-shrink: 0;
+      width: 300px;
+      margin-right: 20px;
+    }
+
+    .card-bg {
+      position: absolute;
+      inset: 0;
+      background: #FFFFFF;
+    }
+
+    .card-gradient {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 50%;
+      border-radius: 20px 20px 0 0;
+    }
+
+    .card-content {
+      position: relative;
+      padding: 24px;
+    }
+
+    .card-thinker {
+      font-family: 'Gambarino', serif;
+      font-size: 24px;
+      line-height: 1.25;
+      color: #282621;
+      margin-bottom: 6px;
+    }
+
+    .card-role {
+      font-family: 'Figtree', sans-serif;
+      font-weight: 500;
+      font-size: 13px;
+      color: #282520;
+      opacity: 0.6;
+      margin-bottom: 16px;
+    }
+
+    .card-quote {
+      font-family: 'Gambarino', serif;
+      font-size: 15px;
+      line-height: 1.45;
+      color: #282520;
+      margin-bottom: 12px;
+    }
+
+    .card-source {
+      font-family: 'Figtree', sans-serif;
+      font-weight: 500;
+      font-size: 13px;
+      color: #282520;
+      opacity: 0.6;
+    }
+
+    /* Mobile */
+    @media (max-width: 600px) {
+      .content {
+        padding: 36px 20px 24px;
+      }
+
+      .logo-pattern {
+        width: 80px;
+        height: 80px;
+      }
+
+      .wordmark {
+        font-size: 48px;
+      }
+
+      .tagline {
+        font-size: 20px;
+      }
+
+      .description {
+        font-size: 15px;
+      }
+
+      .card {
+        width: 260px;
+      }
+
+      .cards-track {
+        width: 3360px; /* 12 cards × (260px + 20px margin) */
+      }
+
+      @keyframes scroll-left {
+        0% { transform: translateX(0); }
+        100% { transform: translateX(-1680px); }
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Centered content -->
+  <main class="content">
+    <div class="logo-pattern">
+      <svg width="100%" height="100%" viewBox="0 0 157 155" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M93.4546 113.356C97.0127 113.343 99.8862 110.449 99.8729 106.892C99.8596 103.336 96.9644 100.463 93.4063 100.477C89.8482 100.49 86.9747 103.384 86.988 106.941C87.0014 110.497 89.8966 113.369 93.4546 113.356Z" fill="#573B2A"/>
+        <path d="M110.784 95.6285C114.342 95.6152 117.215 92.7212 117.202 89.1647C117.189 85.6082 114.293 82.7359 110.735 82.7493C107.177 82.7626 104.304 85.6566 104.317 89.2131C104.33 92.7696 107.226 95.6419 110.784 95.6285Z" fill="#573B2A"/>
+        <path d="M112.624 70.9205C116.182 70.9072 119.055 68.0132 119.042 64.4567C119.028 60.9002 116.133 58.0279 112.575 58.0413C109.017 58.0546 106.144 60.9485 106.157 64.5051C106.17 68.0616 109.065 70.9339 112.624 70.9205Z" fill="#573B2A"/>
+        <path d="M98.1441 50.7818C101.702 50.7685 104.576 47.8746 104.562 44.318C104.549 40.7615 101.654 37.8892 98.0957 37.9026C94.5377 37.9159 91.6641 40.8099 91.6775 44.3664C91.6908 47.9229 94.586 50.7952 98.1441 50.7818Z" fill="#573B2A"/>
+        <path d="M74.1011 44.7076C77.6591 44.6943 80.5327 41.8003 80.5194 38.2438C80.506 34.6873 77.6108 31.815 74.0528 31.8284C70.4947 31.8417 67.6212 34.7357 67.6345 38.2922C67.6478 41.8487 70.543 44.721 74.1011 44.7076Z" fill="#573B2A"/>
+        <path d="M51.7749 55.4635C55.333 55.4501 58.2065 52.5562 58.1932 48.9997C58.1799 45.4432 55.2847 42.5709 51.7266 42.5842C48.1686 42.5976 45.295 45.4915 45.3083 49.048C45.3217 52.6045 48.2169 55.4768 51.7749 55.4635Z" fill="#573B2A"/>
+        <path d="M41.5982 78.0406C45.1562 78.0273 48.0298 75.1333 48.0164 71.5768C48.0031 68.0203 45.1079 65.148 41.5499 65.1614C37.9918 65.1747 35.1182 68.0687 35.1316 71.6252C35.1449 75.1817 38.0401 78.054 41.5982 78.0406Z" fill="#573B2A"/>
+        <path d="M48.314 101.888C51.872 101.875 54.7456 98.981 54.7323 95.4245C54.7189 91.868 51.8237 88.9957 48.2657 89.009C44.7076 89.0224 41.8341 91.9163 41.8474 95.4728C41.8607 99.0293 44.7559 101.902 48.314 101.888Z" fill="#573B2A"/>
+        <path d="M68.7984 115.84C72.3564 115.827 75.23 112.933 75.2166 109.377C75.2033 105.82 72.3081 102.948 68.75 102.961C65.192 102.975 62.3184 105.868 62.3318 109.425C62.3451 112.981 65.2403 115.854 68.7984 115.84Z" fill="#573B2A"/>
+        <path d="M81.5002 128.442C85.3633 128.428 88.4831 125.286 88.4686 121.424C88.4542 117.563 85.3108 114.445 81.4478 114.459C77.5847 114.474 74.4649 117.616 74.4794 121.477C74.4938 125.338 77.6372 128.457 81.5002 128.442Z" fill="#573B2A"/>
+        <path d="M110.626 115.04C114.489 115.025 117.609 111.883 117.595 108.022C117.58 104.161 114.437 101.042 110.574 101.057C106.711 101.071 103.591 104.213 103.605 108.075C103.62 111.936 106.763 115.054 110.626 115.04Z" fill="#573B2A"/>
+        <path d="M124.277 86.0556C128.14 86.0411 131.259 82.8991 131.245 79.0377C131.231 75.1764 128.087 72.0579 124.224 72.0724C120.361 72.0869 117.241 75.2289 117.256 79.0902C117.27 82.9516 120.414 86.0701 124.277 86.0556Z" fill="#573B2A"/>
+        <path d="M116.107 55.0839C119.97 55.0694 123.09 51.9274 123.075 48.0661C123.061 44.2047 119.917 41.0862 116.054 41.1007C112.191 41.1152 109.071 44.2572 109.086 48.1185C109.1 51.9799 112.244 55.0984 116.107 55.0839Z" fill="#573B2A"/>
+        <path d="M89.9465 36.5985C93.8095 36.584 96.9294 33.4421 96.9149 29.5807C96.9004 25.7194 93.7571 22.6009 89.8941 22.6154C86.031 22.6299 82.9112 25.7718 82.9256 29.6332C82.9401 33.4945 86.0835 36.613 89.9465 36.5985Z" fill="#573B2A"/>
+        <path d="M58.0188 39.2948C61.8818 39.2803 65.0017 36.1384 64.9872 32.277C64.9727 28.4157 61.8294 25.2972 57.9663 25.3117C54.1033 25.3261 50.9834 28.4681 50.9979 32.3295C51.0124 36.1908 54.1557 39.3093 58.0188 39.2948Z" fill="#573B2A"/>
+        <path d="M35.2785 61.8271C39.1416 61.8126 42.2614 58.6706 42.247 54.8092C42.2325 50.9479 39.0891 47.8294 35.2261 47.8439C31.3631 47.8584 28.2432 51.0004 28.2577 54.8617C28.2722 58.723 31.4155 61.8415 35.2785 61.8271Z" fill="#573B2A"/>
+        <path d="M32.3156 93.7147C36.1787 93.7003 39.2985 90.5583 39.2841 86.6969C39.2696 82.8356 36.1262 79.7171 32.2632 79.7316C28.4002 79.7461 25.2803 82.8881 25.2948 86.7494C25.3093 90.6107 28.4526 93.7292 32.3156 93.7147Z" fill="#573B2A"/>
+        <path d="M50.591 120.049C54.4541 120.034 57.5739 116.892 57.5595 113.031C57.545 109.17 54.4016 106.051 50.5386 106.066C46.6756 106.08 43.5557 109.222 43.5702 113.083C43.5847 116.945 46.728 120.063 50.591 120.049Z" fill="#573B2A"/>
+        <path d="M127.712 106.328C132.338 106.31 136.073 102.548 136.056 97.9249C136.039 93.3014 132.275 89.5674 127.65 89.5848C123.024 89.6021 119.288 93.3643 119.306 97.9877C119.323 102.611 123.087 106.345 127.712 106.328Z" fill="#573B2A"/>
+        <path d="M131.069 68.9196C135.694 68.9023 139.43 65.1401 139.413 60.5167C139.395 55.8932 135.631 52.1592 131.006 52.1766C126.381 52.1939 122.645 55.9561 122.662 60.5795C122.68 65.203 126.443 68.937 131.069 68.9196Z" fill="#573B2A"/>
+        <path d="M109.601 38.0895C114.227 38.0722 117.962 34.3101 117.945 29.6866C117.927 25.0632 114.164 21.3292 109.538 21.3465C104.913 21.3639 101.177 25.126 101.194 29.7494C101.212 34.3729 104.976 38.1069 109.601 38.0895Z" fill="#573B2A"/>
+        <path d="M73.3022 28.2438C77.9277 28.2265 81.6633 24.4644 81.646 19.8409C81.6286 15.2174 77.8649 11.4835 73.2394 11.5008C68.6139 11.5182 64.8783 15.2803 64.8957 19.9037C64.913 24.5272 68.6768 28.2612 73.3022 28.2438Z" fill="#573B2A"/>
+        <path d="M39.2163 44.0573C43.8418 44.04 47.5774 40.2778 47.56 35.6544C47.5427 31.0309 43.779 27.2969 39.1535 27.3143C34.528 27.3316 30.7924 31.0938 30.8097 35.7172C30.8271 40.3407 34.5908 44.0747 39.2163 44.0573Z" fill="#573B2A"/>
+        <path d="M23.2378 78.1091C27.8632 78.0917 31.5989 74.3296 31.5815 69.7061C31.5642 65.0827 27.8004 61.3487 23.175 61.366C18.5495 61.3834 14.8139 65.1455 14.8312 69.769C14.8485 74.3924 18.6123 78.1264 23.2378 78.1091Z" fill="#573B2A"/>
+        <path d="M32.8989 114.412C37.5244 114.394 41.26 110.632 41.2427 106.009C41.2253 101.385 37.4616 97.6514 32.8361 97.6688C28.2106 97.6861 24.475 101.448 24.4923 106.072C24.5097 110.695 28.2734 114.429 32.8989 114.412Z" fill="#573B2A"/>
+        <path d="M63.6284 136.053C68.2539 136.036 71.9895 132.274 71.9722 127.65C71.9548 123.027 68.1911 119.293 63.5656 119.31C58.9401 119.328 55.2045 123.09 55.2218 127.713C55.2392 132.337 59.0029 136.071 63.6284 136.053Z" fill="#573B2A"/>
+        <path d="M101.076 132.831C105.701 132.813 109.437 129.051 109.419 124.428C109.402 119.804 105.638 116.07 101.013 116.088C96.3874 116.105 92.6518 119.867 92.6691 124.491C92.6864 129.114 96.4502 132.848 101.076 132.831Z" fill="#573B2A"/>
+        <path d="M123.273 137.348C128.432 137.329 132.599 133.132 132.579 127.975C132.56 122.818 128.362 118.654 123.203 118.673C118.044 118.692 113.877 122.889 113.896 128.045C113.916 133.202 118.114 137.367 123.273 137.348Z" fill="#573B2A"/>
+        <path d="M146.724 95.8156C151.883 95.7963 156.05 91.6001 156.031 86.4432C156.011 81.2862 151.813 77.1214 146.654 77.1407C141.495 77.1601 137.328 81.3563 137.348 86.5132C137.367 91.6702 141.565 95.835 146.724 95.8156Z" fill="#573B2A"/>
+        <path d="M137.943 48.9768C143.102 48.9574 147.269 44.7612 147.249 39.6043C147.23 34.4474 143.032 30.2825 137.873 30.3019C132.714 30.3212 128.547 34.5174 128.566 39.6744C128.586 44.8313 132.784 48.9961 137.943 48.9768Z" fill="#573B2A"/>
+        <path d="M101.107 18.7102C106.266 18.6908 110.433 14.4946 110.413 9.33768C110.394 4.18075 106.196 0.0159208 101.037 0.0352727C95.8777 0.0546247 91.711 4.25083 91.7303 9.40776C91.7497 14.5647 95.9477 18.7295 101.107 18.7102Z" fill="#573B2A"/>
+        <path d="M53.434 19.2111C58.5932 19.1918 62.7599 14.9956 62.7405 9.83866C62.7212 4.68173 58.5232 0.516897 53.364 0.536249C48.2048 0.555601 44.0381 4.75181 44.0575 9.90874C44.0768 15.0657 48.2749 19.2305 53.434 19.2111Z" fill="#573B2A"/>
+        <path d="M17.1958 50.2111C22.3549 50.1918 26.5216 45.9956 26.5023 40.8387C26.4829 35.6817 22.2849 31.5169 17.1257 31.5362C11.9665 31.5556 7.79986 35.7518 7.8192 40.9087C7.83855 46.0657 12.0366 50.2305 17.1958 50.2111Z" fill="#573B2A"/>
+        <path d="M9.41157 97.2502C14.5708 97.2309 18.7374 93.0347 18.7181 87.8777C18.6987 82.7208 14.5007 78.556 9.34153 78.5753C4.18234 78.5947 0.015681 82.7909 0.0350245 87.9478C0.054368 93.1047 4.25239 97.2696 9.41157 97.2502Z" fill="#573B2A"/>
+        <path d="M33.6792 138.281C38.8383 138.262 43.005 134.066 42.9857 128.909C42.9663 123.752 38.7683 119.587 33.6091 119.607C28.4499 119.626 24.2833 123.822 24.3026 128.979C24.3219 134.136 28.52 138.301 33.6792 138.281Z" fill="#573B2A"/>
+        <path d="M78.6518 154.12C83.811 154.101 87.9777 149.905 87.9583 144.748C87.939 139.591 83.7409 135.426 78.5818 135.445C73.4226 135.465 69.2559 139.661 69.2753 144.818C69.2946 149.975 73.4926 154.14 78.6518 154.12Z" fill="#573B2A"/>
+      </svg>
+    </div>
+
+    <h1 class="wordmark">Pania</h1>
+    <p class="tagline">Wisdom of the past,<br>for your present.</p>
+    <p class="description">
+      A daily companion that listens to what's happening in your life,
+      asks thoughtful questions, and surfaces wisdom from across spiritual
+      and philosophical traditions.
+    </p>
+    <div class="download-buttons">
+      <a href="#" aria-label="Download on the App Store">
+        <img src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg" alt="Download on the App Store">
+      </a>
+      <a href="#" aria-label="Get it on Google Play">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg" alt="Get it on Google Play">
+      </a>
+    </div>
+
+    <div class="content-footer">
+      <span class="content-footer-text">pania.world</span>
+      <span class="content-footer-sep">&middot;</span>
+      <a href="/terms-of-service" class="content-footer-link">Terms</a>
+      <span class="content-footer-sep">&middot;</span>
+      <a href="/privacy-policy" class="content-footer-link">Privacy</a>
+    </div>
+  </main>
+
+  <!-- Horizontal scrolling cards -->
+  <div class="cards-strip">
+    <div class="cards-track">
+      <!-- Card 1: Stoicism -->
+      <div class="card">
+        <div class="card-bg"></div>
+        <div class="card-gradient" style="background: linear-gradient(180deg, rgba(91,124,141,0.4) 0%, transparent 100%);"></div>
+        <div class="card-content">
+          <div class="card-thinker">Marcus Aurelius</div>
+          <div class="card-role">Roman Emperor & Stoic Philosopher</div>
+          <div class="card-quote">"You have power over your mind — not outside events. Realize this, and you will find strength."</div>
+          <div class="card-source">— Meditations</div>
+        </div>
+      </div>
+
+      <!-- Card 2: Buddhism -->
+      <div class="card">
+        <div class="card-bg"></div>
+        <div class="card-gradient" style="background: linear-gradient(180deg, rgba(184,134,11,0.4) 0%, transparent 100%);"></div>
+        <div class="card-content">
+          <div class="card-thinker">Thich Nhat Hanh</div>
+          <div class="card-role">Vietnamese Zen Master</div>
+          <div class="card-quote">"Feelings come and go like clouds in a windy sky. Conscious breathing is my anchor."</div>
+        </div>
+      </div>
+
+      <!-- Card 3: Sufism -->
+      <div class="card">
+        <div class="card-bg"></div>
+        <div class="card-gradient" style="background: linear-gradient(180deg, rgba(139,107,139,0.4) 0%, transparent 100%);"></div>
+        <div class="card-content">
+          <div class="card-thinker">Rumi</div>
+          <div class="card-role">13th-Century Sufi Poet</div>
+          <div class="card-quote">"The wound is the place where the Light enters you."</div>
+        </div>
+      </div>
+
+      <!-- Card 4: Christianity -->
+      <div class="card">
+        <div class="card-bg"></div>
+        <div class="card-gradient" style="background: linear-gradient(180deg, rgba(139,90,90,0.4) 0%, transparent 100%);"></div>
+        <div class="card-content">
+          <div class="card-thinker">Thomas Merton</div>
+          <div class="card-role">Trappist Monk & Author</div>
+          <div class="card-quote">"In the last analysis, the individual person is responsible for living his own life and for finding himself. If he persists in shifting this responsibility to somebody else, he fails to find out the meaning of his own existence."</div>
+          <div class="card-source">— No Man Is an Island</div>
+        </div>
+      </div>
+
+      <!-- Card 5: Taoism -->
+      <div class="card">
+        <div class="card-bg"></div>
+        <div class="card-gradient" style="background: linear-gradient(180deg, rgba(90,124,90,0.4) 0%, transparent 100%);"></div>
+        <div class="card-content">
+          <div class="card-thinker">Lao Tzu</div>
+          <div class="card-role">Ancient Chinese Philosopher</div>
+          <div class="card-quote">"Nature does not hurry, yet everything is accomplished."</div>
+          <div class="card-source">— Tao Te Ching</div>
+        </div>
+      </div>
+
+      <!-- Card 6: Judaism -->
+      <div class="card">
+        <div class="card-bg"></div>
+        <div class="card-gradient" style="background: linear-gradient(180deg, rgba(107,107,139,0.4) 0%, transparent 100%);"></div>
+        <div class="card-content">
+          <div class="card-thinker">Abraham Joshua Heschel</div>
+          <div class="card-role">Rabbi & Theologian</div>
+          <div class="card-quote">"Our goal should be to live life in radical amazement — to get up in the morning and look at the world in a way that takes nothing for granted."</div>
+        </div>
+      </div>
+
+      <!-- Duplicate set for seamless loop -->
+      <div class="card">
+        <div class="card-bg"></div>
+        <div class="card-gradient" style="background: linear-gradient(180deg, rgba(91,124,141,0.4) 0%, transparent 100%);"></div>
+        <div class="card-content">
+          <div class="card-thinker">Marcus Aurelius</div>
+          <div class="card-role">Roman Emperor & Stoic Philosopher</div>
+          <div class="card-quote">"You have power over your mind — not outside events. Realize this, and you will find strength."</div>
+          <div class="card-source">— Meditations</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-bg"></div>
+        <div class="card-gradient" style="background: linear-gradient(180deg, rgba(184,134,11,0.4) 0%, transparent 100%);"></div>
+        <div class="card-content">
+          <div class="card-thinker">Thich Nhat Hanh</div>
+          <div class="card-role">Vietnamese Zen Master</div>
+          <div class="card-quote">"Feelings come and go like clouds in a windy sky. Conscious breathing is my anchor."</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-bg"></div>
+        <div class="card-gradient" style="background: linear-gradient(180deg, rgba(139,107,139,0.4) 0%, transparent 100%);"></div>
+        <div class="card-content">
+          <div class="card-thinker">Rumi</div>
+          <div class="card-role">13th-Century Sufi Poet</div>
+          <div class="card-quote">"The wound is the place where the Light enters you."</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-bg"></div>
+        <div class="card-gradient" style="background: linear-gradient(180deg, rgba(139,90,90,0.4) 0%, transparent 100%);"></div>
+        <div class="card-content">
+          <div class="card-thinker">Thomas Merton</div>
+          <div class="card-role">Trappist Monk & Author</div>
+          <div class="card-quote">"In the last analysis, the individual person is responsible for living his own life and for finding himself. If he persists in shifting this responsibility to somebody else, he fails to find out the meaning of his own existence."</div>
+          <div class="card-source">— No Man Is an Island</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-bg"></div>
+        <div class="card-gradient" style="background: linear-gradient(180deg, rgba(90,124,90,0.4) 0%, transparent 100%);"></div>
+        <div class="card-content">
+          <div class="card-thinker">Lao Tzu</div>
+          <div class="card-role">Ancient Chinese Philosopher</div>
+          <div class="card-quote">"Nature does not hurry, yet everything is accomplished."</div>
+          <div class="card-source">— Tao Te Ching</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-bg"></div>
+        <div class="card-gradient" style="background: linear-gradient(180deg, rgba(107,107,139,0.4) 0%, transparent 100%);"></div>
+        <div class="card-content">
+          <div class="card-thinker">Abraham Joshua Heschel</div>
+          <div class="card-role">Rabbi & Theologian</div>
+          <div class="card-quote">"Our goal should be to live life in radical amazement — to get up in the morning and look at the world in a way that takes nothing for granted."</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
