@@ -1,5 +1,6 @@
 import { supabase } from './supabase';
 import { setUserId, clearUserId, getUserName, getUserId, setUserName, setOnboarded, clearOnboarding } from './storage';
+import { deleteEncryptionKey } from './encryption';
 import * as WebBrowser from 'expo-web-browser';
 import { makeRedirectUri } from 'expo-auth-session';
 
@@ -353,6 +354,9 @@ export async function deleteAccount(): Promise<{ error: Error | null }> {
     if (profileError) {
       console.error('Failed to delete profile:', profileError);
     }
+
+    // Delete encryption key (makes encrypted data unrecoverable)
+    await deleteEncryptionKey();
 
     // Sign out and clear local data
     await supabase.auth.signOut();

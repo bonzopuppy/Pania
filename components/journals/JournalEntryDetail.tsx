@@ -46,7 +46,7 @@ export default function JournalEntryDetail({ entry }: JournalEntryDetailProps) {
   };
 
   // If we have conversation data, show the full replay
-  if (conversationData && conversationData.messages.length > 0) {
+  if (conversationData && conversationData.messages?.length > 0) {
     return (
       <ScrollView
         style={styles.container}

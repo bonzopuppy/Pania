@@ -33,7 +33,7 @@ export default function JournalEntryCard({ entry, onPress, onContinue }: Journal
     : { primary: CardColors.textMuted, light: CardColors.backgroundInput };
 
   const conversationData = entry.conversation_data as ConversationData | null;
-  const hasConversationData = conversationData && conversationData.messages.length > 0;
+  const hasConversationData = conversationData && conversationData.messages?.length > 0;
 
   const handlePress = () => {
     if (onPress) {

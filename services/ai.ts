@@ -1,9 +1,11 @@
 /**
  * AI Service for Pania
- * Handles communication with Claude API for clarifying questions and passage retrieval
+ * Handles communication with Claude API via Supabase Edge Function proxy
  */
 
-const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages';
+import { supabase } from './supabase';
+import { anonymize } from './anonymize';
+import { getUserName } from './storage';
 
 // Types for our AI responses
 export interface ClarifyResponse {
@@ -106,50 +108,38 @@ Respond in JSON format only:
 {"intent": "wants_more_voices", "confidence": 0.95}`;
 
 class AIService {
-  private apiKey: string | null = null;
-
-  setApiKey(key: string) {
-    this.apiKey = key;
+  private async anonymizeText(text: string): Promise<string> {
+    const name = await getUserName();
+    const { data: { user } } = await supabase.auth.getUser();
+    return anonymize(text, name, user?.email);
   }
 
   private async callClaude(systemPrompt: string, userMessage: string): Promise<string> {
-    if (!this.apiKey) {
-      throw new Error('API key not set. Call setApiKey() first.');
-    }
-
-    const response = await fetch(ANTHROPIC_API_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': this.apiKey,
-        'anthropic-version': '2023-06-01',
-      },
-      body: JSON.stringify({
+    const { data, error } = await supabase.functions.invoke('claude-proxy', {
+      body: {
+        system: systemPrompt,
+        messages: [{ role: 'user', content: userMessage }],
         model: 'claude-sonnet-4-20250514',
         max_tokens: 1024,
-        system: systemPrompt,
-        messages: [
-          {
-            role: 'user',
-            content: userMessage,
-          },
-        ],
-      }),
+      },
     });
 
-    if (!response.ok) {
-      const error = await response.text();
-      throw new Error(`API error: ${response.status} - ${error}`);
+    if (error) {
+      throw new Error(`AI proxy error: ${error.message}`);
     }
 
-    const data = await response.json();
+    if (data?.error) {
+      throw new Error(`AI service error: ${data.error}`);
+    }
+
     return data.content[0].text;
   }
 
   async getClarifyingQuestion(userInput: string): Promise<ClarifyResponse> {
+    const safeInput = await this.anonymizeText(userInput);
     const response = await this.callClaude(
       CLARIFY_SYSTEM_PROMPT,
-      `The user shared: "${userInput}"`
+      `The user shared: "${safeInput}"`
     );
 
     try {
@@ -175,11 +165,14 @@ class AIService {
     conversationContext?: string,    // Full conversation summary
     excludeThinkers?: string[]       // Previously shown thinker names
   ): Promise<WisdomResponse> {
-    const userMessage = `The user initially shared: "${userInput}"
+    const safeInput = await this.anonymizeText(userInput);
+    const safeClarification = await this.anonymizeText(clarification);
+    const safeContext = conversationContext ? await this.anonymizeText(conversationContext) : undefined;
+    const userMessage = `The user initially shared: "${safeInput}"
 
-When asked to clarify, they said: "${clarification}"
+When asked to clarify, they said: "${safeClarification}"
 
-${conversationContext ? `Additional context from the conversation:\n${conversationContext}\n` : ''}${excludeThinkers?.length ? `IMPORTANT: Do NOT include passages from these thinkers who were already shown: ${excludeThinkers.join(', ')}\n` : ''}
+${safeContext ? `Additional context from the conversation:\n${safeContext}\n` : ''}${excludeThinkers?.length ? `IMPORTANT: Do NOT include passages from these thinkers who were already shown: ${excludeThinkers.join(', ')}\n` : ''}
 Please surface 4 NEW passages from different traditions that speak to this situation.`;
 
     const response = await this.callClaude(
@@ -208,11 +201,13 @@ Please surface 4 NEW passages from different traditions that speak to this situa
     selectedVoice: Passage,
     reflection: string
   ): Promise<ReflectionAcknowledgmentResponse> {
+    const safeInput = await this.anonymizeText(userInput);
+    const safeReflection = await this.anonymizeText(reflection);
     const systemPrompt = `You are a thoughtful companion helping someone reflect on wisdom.
 
-The user shared: "${userInput}"
+The user shared: "${safeInput}"
 They read this passage from ${selectedVoice.thinker}: "${selectedVoice.text}"
-They reflected: "${reflection}"
+They reflected: "${safeReflection}"
 
 Respond with a brief, warm acknowledgment (2-3 sentences) that:
 - Honors their reflection
@@ -223,7 +218,7 @@ Then, in a SEPARATE paragraph (use \\n\\n), ask if they'd like to hear more voic
 
 Respond with JSON: { "acknowledgment": "your response with two paragraphs separated by \\n\\n" }`;
 
-    const response = await this.callClaude(systemPrompt, reflection);
+    const response = await this.callClaude(systemPrompt, safeReflection);
 
     try {
       // Extract JSON from response (handle markdown code blocks)
@@ -242,7 +237,8 @@ Respond with JSON: { "acknowledgment": "your response with two paragraphs separa
   }
 
   async classifyIntent(userMessage: string): Promise<IntentClassificationResponse> {
-    const response = await this.callClaude(INTENT_CLASSIFICATION_PROMPT, userMessage);
+    const safeMessage = await this.anonymizeText(userMessage);
+    const response = await this.callClaude(INTENT_CLASSIFICATION_PROMPT, safeMessage);
 
     try {
       const jsonMatch = response.match(/\{[\s\S]*\}/);
@@ -308,11 +304,4 @@ function getFallbackPassages(): Passage[] {
   ];
 }
 
-// Export singleton instance with API key initialized
-import { ANTHROPIC_API_KEY } from './config';
-
-const aiServiceInstance = new AIService();
-if (ANTHROPIC_API_KEY) {
-  aiServiceInstance.setApiKey(ANTHROPIC_API_KEY);
-}
-export const aiService = aiServiceInstance;
+export const aiService = new AIService();

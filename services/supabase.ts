@@ -73,7 +73,7 @@ export type JournalEntry = {
   context: string | null;
   reflection_question: string | null;
   notes: string | null;
-  conversation_data: Record<string, unknown> | null;
+  conversation_data: Record<string, unknown> | string | null;
   created_at: string;
 };
 

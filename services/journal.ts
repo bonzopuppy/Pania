@@ -1,5 +1,6 @@
 import { supabase, JournalEntry } from './supabase';
 import { Passage } from './ai';
+import { encryptField, decryptField, looksEncrypted } from './encryption';
 
 export type { JournalEntry };
 
@@ -39,6 +40,71 @@ export type CreateJournalEntryParams = {
   conversationData?: ConversationData;
 };
 
+// Sensitive fields that get encrypted before storage
+const ENCRYPTED_FIELDS = ['user_input', 'clarification', 'notes', 'conversation_data'] as const;
+
+/**
+ * Encrypt sensitive fields before writing to Supabase
+ */
+async function encryptSensitiveFields(
+  data: Record<string, unknown>
+): Promise<Record<string, unknown>> {
+  const result = { ...data };
+
+  for (const field of ENCRYPTED_FIELDS) {
+    const value = result[field];
+    if (value == null) continue;
+
+    // Stringify objects (conversation_data is JSON)
+    const plaintext = typeof value === 'string' ? value : JSON.stringify(value);
+    result[field] = await encryptField(plaintext);
+  }
+
+  return result;
+}
+
+/**
+ * Decrypt a journal entry after reading from Supabase.
+ * Handles backward compatibility with old unencrypted entries.
+ */
+async function decryptEntry(entry: JournalEntry): Promise<JournalEntry> {
+  const result: Record<string, unknown> = { ...entry };
+
+  // Decrypt string fields
+  for (const field of ['user_input', 'clarification', 'notes']) {
+    const value = result[field];
+    if (typeof value === 'string' && looksEncrypted(value)) {
+      try {
+        result[field] = await decryptField(value);
+      } catch {
+        // If decryption fails, leave as-is (may be old unencrypted data)
+      }
+    }
+  }
+
+  // Decrypt conversation_data (encrypted as string, old format is object or JSON string)
+  const convData = result.conversation_data;
+  if (typeof convData === 'string') {
+    if (looksEncrypted(convData)) {
+      try {
+        const decrypted = await decryptField(convData);
+        result.conversation_data = JSON.parse(decrypted);
+      } catch {
+        // Leave as-is if decryption fails
+      }
+    } else {
+      // Old unencrypted entry: column changed from JSONB to TEXT, so parse it back
+      try {
+        result.conversation_data = JSON.parse(convData);
+      } catch {
+        // Not valid JSON, leave as-is
+      }
+    }
+  }
+
+  return result as JournalEntry;
+}
+
 /**
  * Save a journal entry to Supabase
  */
@@ -57,21 +123,25 @@ export async function saveJournalEntry(
       return { entry: null, error: new Error('User not authenticated') };
     }
 
+    const rawData: Record<string, unknown> = {
+      user_id: user.id,
+      user_input: params.userInput,
+      clarification: params.clarification || null,
+      tradition: params.tradition || null,
+      thinker: params.thinker || null,
+      passage_text: params.passageText || null,
+      source: params.source || null,
+      context: params.context || null,
+      reflection_question: params.reflectionQuestion || null,
+      notes: params.notes || null,
+      conversation_data: params.conversationData || null,
+    };
+
+    const encryptedData = await encryptSensitiveFields(rawData);
+
     const { data, error } = await supabase
       .from('journal_entries')
-      .insert({
-        user_id: user.id,
-        user_input: params.userInput,
-        clarification: params.clarification || null,
-        tradition: params.tradition || null,
-        thinker: params.thinker || null,
-        passage_text: params.passageText || null,
-        source: params.source || null,
-        context: params.context || null,
-        reflection_question: params.reflectionQuestion || null,
-        notes: params.notes || null,
-        conversation_data: params.conversationData || null,
-      })
+      .insert(encryptedData)
       .select()
       .single();
 
@@ -79,7 +149,8 @@ export async function saveJournalEntry(
       return { entry: null, error };
     }
 
-    return { entry: data, error: null };
+    const decrypted = await decryptEntry(data);
+    return { entry: decrypted, error: null };
   } catch (error) {
     return { entry: null, error: error as Error };
   }
@@ -112,9 +183,11 @@ export async function updateJournalEntry(
     if (updates.notes !== undefined) updateData.notes = updates.notes;
     if (updates.conversationData !== undefined) updateData.conversation_data = updates.conversationData;
 
+    const encryptedUpdate = await encryptSensitiveFields(updateData);
+
     const { data, error } = await supabase
       .from('journal_entries')
-      .update(updateData)
+      .update(encryptedUpdate)
       .eq('id', id)
       .eq('user_id', user.id)
       .select()
@@ -124,7 +197,8 @@ export async function updateJournalEntry(
       return { entry: null, error };
     }
 
-    return { entry: data, error: null };
+    const decrypted = await decryptEntry(data);
+    return { entry: decrypted, error: null };
   } catch (error) {
     return { entry: null, error: error as Error };
   }
@@ -151,7 +225,8 @@ export async function getJournalEntries(): Promise<{ entries: JournalEntry[]; er
       return { entries: [], error };
     }
 
-    return { entries: data || [], error: null };
+    const decrypted = await Promise.all((data || []).map(decryptEntry));
+    return { entries: decrypted, error: null };
   } catch (error) {
     return { entries: [], error: error as Error };
   }
@@ -179,7 +254,8 @@ export async function getJournalEntry(id: string): Promise<{ entry: JournalEntry
       return { entry: null, error };
     }
 
-    return { entry: data, error: null };
+    const decrypted = await decryptEntry(data);
+    return { entry: decrypted, error: null };
   } catch (error) {
     return { entry: null, error: error as Error };
   }
