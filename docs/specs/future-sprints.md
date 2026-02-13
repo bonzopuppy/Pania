@@ -14,8 +14,8 @@
 ## Upcoming
 
 ### Sprint 1: Authentication
-- Hook up Google OAuth (replace "Coming Soon" alert with real sign-in)
-- Hook up Apple OAuth (replace "Coming Soon" alert with real sign-in)
+- ~~Hook up Google OAuth (replace "Coming Soon" alert with real sign-in)~~ — Done
+- ~~Hook up Apple OAuth (replace "Coming Soon" alert with real sign-in)~~ — Done
 
 ### Sprint 2: Monetization
 - Decide on paywall model (freemium vs straight subscription)

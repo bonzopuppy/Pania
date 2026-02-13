@@ -21,8 +21,7 @@ import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Fonts, Typography, Spacing } from '@/constants/theme';
-
-type OAuthProvider = 'google' | 'apple';
+import { signInWithOAuth, type OAuthProvider } from '@/services/auth';
 
 // SVG imports
 import PaniaPattern from '@/assets/images/patterns/pania-pattern.svg';
@@ -84,11 +83,24 @@ export default function WelcomeScreen() {
     ]).start();
   }, [fadeAnim, slideAnim]);
 
-  const handleOAuthSignIn = (provider: OAuthProvider) => {
-    Alert.alert(
-      'Coming Soon',
-      `Sign in with ${provider === 'google' ? 'Google' : 'Apple'} will be available soon.`
-    );
+  const handleOAuthSignIn = async (provider: OAuthProvider) => {
+    setLoading(true);
+    try {
+      const result = await signInWithOAuth(provider);
+
+      if (result.error) {
+        Alert.alert('Error', result.error.message);
+      } else if (result.user) {
+        if (result.isNewUser) {
+          router.replace('/onboarding-name');
+        } else {
+          router.replace('/chat');
+        }
+      }
+      // If no user and no error, user cancelled — do nothing
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSignIn = () => {

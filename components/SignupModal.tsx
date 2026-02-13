@@ -77,11 +77,10 @@ export default function SignupModal({ visible, onClose, onSuccess, mode = 'save'
 
       if (result.error) {
         Alert.alert('Error', result.error.message);
-      } else {
-        // OAuth flow will redirect to browser and back
-        // Session will be handled by the OAuth callback
+      } else if (result.user) {
         onSuccess();
       }
+      // If no user and no error, user cancelled — do nothing
     } finally {
       setLoading(false);
     }

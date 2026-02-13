@@ -247,79 +247,69 @@ export async function restoreUserSession(): Promise<{ authenticated: boolean; na
 
 /**
  * Sign in with OAuth provider (Google or Apple)
+ * Uses Expo WebBrowser auth session to handle the redirect flow inline.
  */
-export async function signInWithOAuth(provider: OAuthProvider): Promise<{ user: AuthUser | null; error: Error | null }> {
+export async function signInWithOAuth(provider: OAuthProvider): Promise<{ user: AuthUser | null; error: Error | null; isNewUser: boolean }> {
   try {
     const redirectUrl = makeRedirectUri();
-    console.log('OAuth redirect URL:', redirectUrl);
 
+    // 1. Get the OAuth URL from Supabase (don't let it redirect)
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider,
       options: {
         redirectTo: redirectUrl,
-        skipBrowserRedirect: false,
+        skipBrowserRedirect: true,
       },
     });
 
-    if (error) {
-      console.error(`${provider} OAuth error:`, error);
-      return { user: null, error };
+    if (error || !data.url) {
+      return { user: null, error: error || new Error('No OAuth URL returned'), isNewUser: false };
     }
 
-    // OAuth flow will redirect back to the app
-    // The session will be established automatically by Supabase
-    console.log(`${provider} OAuth initiated:`, data);
+    // 2. Open auth session in browser — waits for redirect back
+    const result = await WebBrowser.openAuthSessionAsync(data.url, redirectUrl);
 
-    // Note: The actual user data will be available after the OAuth redirect completes
-    // The calling component should listen for session changes or re-check auth state
-    return { user: null, error: null };
+    if (result.type !== 'success' || !result.url) {
+      // User cancelled — not an error
+      return { user: null, error: null, isNewUser: false };
+    }
+
+    // 3. Extract tokens from the redirect URL fragment
+    const url = new URL(result.url);
+    const params = new URLSearchParams(url.hash.substring(1));
+    const access_token = params.get('access_token');
+    const refresh_token = params.get('refresh_token');
+
+    if (!access_token || !refresh_token) {
+      return { user: null, error: new Error('Missing tokens in OAuth response'), isNewUser: false };
+    }
+
+    // 4. Establish the Supabase session
+    const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
+      access_token,
+      refresh_token,
+    });
+
+    if (sessionError || !sessionData.user) {
+      return { user: null, error: sessionError || new Error('Failed to set session'), isNewUser: false };
+    }
+
+    // 5. Store user ID + check for existing profile
+    await setUserId(sessionData.user.id);
+
+    const { name } = await fetchUserProfile(sessionData.user.id);
+    let isNewUser = true;
+
+    if (name) {
+      // Returning user — sync profile data locally
+      await setUserName(name);
+      await setOnboarded();
+      isNewUser = false;
+    }
+
+    return { user: { id: sessionData.user.id, email: sessionData.user.email }, error: null, isNewUser };
   } catch (error) {
-    console.error(`${provider} OAuth exception:`, error);
-    return { user: null, error: error as Error };
-  }
-}
-
-/**
- * Handle OAuth callback after redirect
- * Call this when the app is opened from OAuth redirect
- */
-export async function handleOAuthCallback(): Promise<{ user: AuthUser | null; error: Error | null }> {
-  try {
-    // Get the current session after OAuth redirect
-    const { data: { session }, error } = await supabase.auth.getSession();
-
-    if (error) {
-      console.error('OAuth callback error:', error);
-      return { user: null, error };
-    }
-
-    if (session?.user) {
-      // Store user ID locally
-      await setUserId(session.user.id);
-
-      // Create or update profile with stored name if available
-      const name = await getUserName();
-      const email = session.user.email;
-
-      if (name || email) {
-        const { error: profileError } = await supabase.from('profiles').upsert({
-          id: session.user.id,
-          name: name || null,
-          email: email || null,
-        });
-
-        if (profileError) {
-          console.error('Profile upsert error:', profileError);
-        }
-      }
-
-      return { user: { id: session.user.id, email: session.user.email }, error: null };
-    }
-
-    return { user: null, error: new Error('No session after OAuth callback') };
-  } catch (error) {
-    console.error('OAuth callback exception:', error);
-    return { user: null, error: error as Error };
+    return { user: null, error: error as Error, isNewUser: false };
   }
 }
 
