@@ -9,9 +9,7 @@
 - ~~Rotate exposed Anthropic API key~~ — Done
 - Day One-style Privacy Pledge page (plain language, not legalese — "your entries are yours, we can't read them, we don't sell data, AI doesn't train on your data, delete means delete")
 - Data export feature (let users export all their data regardless of subscription status)
-- Add Privacy Policy and Terms of Service links in the app profile screen
-
-## Upcoming
+- ~~Add Privacy Policy and Terms of Service links in the app profile screen~~ — Done
 
 ### Sprint 1: Authentication
 - ~~Hook up Google OAuth (replace "Coming Soon" alert with real sign-in)~~ — Done
