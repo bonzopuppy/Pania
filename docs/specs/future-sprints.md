@@ -15,9 +15,10 @@
 - ~~Hook up Google OAuth (replace "Coming Soon" alert with real sign-in)~~ — Done
 - ~~Hook up Apple OAuth (replace "Coming Soon" alert with real sign-in)~~ — Done
 
-### Sprint 2: Card Loading Performance
+### Sprint 2: Card Loading Performance & Journal UX
 - Reduce initial card retrieval time (optimize API calls, prompt, or response streaming)
 - Loading UX strategy (skeleton cards, progressive reveal, or animation to mask latency)
+- Delete individual journal entries from the UI
 
 ### Sprint 3: Monetization
 - Decide on paywall model (freemium vs straight subscription)
