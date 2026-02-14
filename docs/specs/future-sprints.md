@@ -47,4 +47,5 @@
 - Zero Data Retention agreement with Anthropic (eliminates even the 30-day API log window)
 - Biometric / passcode app lock
 - On-device AI for sensitive classification tasks (reduce content sent to Anthropic)
+- Switch OAuth from implicit flow to PKCE (Proof Key for Code Exchange) for defense-in-depth
 - Third-party security audit

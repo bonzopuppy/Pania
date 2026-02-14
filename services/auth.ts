@@ -297,14 +297,13 @@ export async function signInWithOAuth(provider: OAuthProvider): Promise<{ user: 
     // 5. Store user ID + check for existing profile
     await setUserId(sessionData.user.id);
 
-    const { name } = await fetchUserProfile(sessionData.user.id);
-    let isNewUser = true;
+    const { name, error: profileError } = await fetchUserProfile(sessionData.user.id);
+    let isNewUser = !name && !profileError; // Only "new" if profile genuinely doesn't exist
 
     if (name) {
       // Returning user — sync profile data locally
       await setUserName(name);
       await setOnboarded();
-      isNewUser = false;
     }
 
     return { user: { id: sessionData.user.id, email: sessionData.user.email }, error: null, isNewUser };
