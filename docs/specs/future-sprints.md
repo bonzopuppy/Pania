@@ -15,27 +15,31 @@
 - ~~Hook up Google OAuth (replace "Coming Soon" alert with real sign-in)~~ — Done
 - ~~Hook up Apple OAuth (replace "Coming Soon" alert with real sign-in)~~ — Done
 
-### Sprint 2: Monetization
+### Sprint 2: Card Loading Performance
+- Reduce initial card retrieval time (optimize API calls, prompt, or response streaming)
+- Loading UX strategy (skeleton cards, progressive reveal, or animation to mask latency)
+
+### Sprint 3: Monetization
 - Decide on paywall model (freemium vs straight subscription)
 - Implement paid feature gating
 - Integrate payment provider (App Store / Google Play IAP)
 
-### Sprint 3: Push Notifications
+### Sprint 4: Push Notifications
 - Daily wisdom reminders
 - Journal prompts / check-in nudges
 - Notification preferences and scheduling
 
-### Sprint 4: Streak Tracking
+### Sprint 5: Streak Tracking
 - Track consecutive days of engagement
 - Visual streak indicator in the UI
 - Streak milestones / encouragement
 
-### Sprint 5: Personalization
+### Sprint 6: Personalization
 - Tradition preferences (favorite/prioritize certain traditions)
 - Tailored wisdom based on journal history and themes
 - Adaptive question depth based on user engagement
 
-### Sprint 6: Deeper Journaling
+### Sprint 7: Deeper Journaling
 - Extended journal sessions with follow-up questions
 - Journal entry summaries and insights over time
 - Reflection history and patterns
