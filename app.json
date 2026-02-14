@@ -4,7 +4,7 @@
     "slug": "Pania",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/branding/icon.png",
+    "icon": "./assets/images/branding/icon-light.png",
     "scheme": "pania",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
@@ -13,6 +13,10 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.pania.app",
       "buildNumber": "3",
+      "icon": {
+        "light": "./assets/images/branding/icon-light.png",
+        "dark": "./assets/images/branding/icon-dark.png"
+      },
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
