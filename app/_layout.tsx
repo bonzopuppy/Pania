@@ -79,13 +79,13 @@ export default function RootLayout() {
   return (
     <ThemeProvider value={colorScheme === 'dark' ? PaniaDarkTheme : PaniaLightTheme}>
       <Stack>
-        <Stack.Screen name="index" options={{ headerShown: false }} />
-        <Stack.Screen name="welcome" options={{ headerShown: false }} />
+        <Stack.Screen name="index" options={{ headerShown: false, animation: 'none' }} />
+        <Stack.Screen name="welcome" options={{ headerShown: false, animation: 'fade', animationDuration: 400 }} />
         <Stack.Screen name="signin" options={{ headerShown: false, animation: 'slide_from_bottom' }} />
         <Stack.Screen name="signup-email" options={{ headerShown: false, animation: 'slide_from_bottom' }} />
         <Stack.Screen name="terms-of-service" options={{ headerShown: false, animation: 'slide_from_bottom' }} />
         <Stack.Screen name="onboarding-name" options={{ headerShown: false }} />
-        <Stack.Screen name="chat" options={{ headerShown: false }} />
+        <Stack.Screen name="chat" options={{ headerShown: false, animation: 'fade', animationDuration: 400 }} />
         <Stack.Screen
           name="journals"
           options={{
