@@ -9,6 +9,7 @@ import {
   Alert,
   Dimensions,
   ScrollView,
+  Linking,
 } from 'react-native';
 import Reanimated, {
   useSharedValue,
@@ -256,6 +257,12 @@ export default function SignUpEmailScreen() {
                 onPress={() => router.push('/terms-of-service')}
               >
                 Terms of Service
+              </Text>{' '}and{' '}
+              <Text
+                style={{ fontFamily: Fonts.sansBold, textDecorationLine: 'underline' }}
+                onPress={() => Linking.openURL('https://pania.world/privacy-policy')}
+              >
+                Privacy Policy
               </Text>.
             </Text>
           </Pressable>

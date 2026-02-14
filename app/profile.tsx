@@ -7,6 +7,7 @@ import {
   Alert,
   ScrollView,
   Modal,
+  Linking,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router, useFocusEffect } from 'expo-router';
@@ -368,6 +369,39 @@ export default function ProfileScreen() {
             </Pressable>
           )}
         </LinearGradient>
+
+        {/* Legal Links */}
+        <View style={styles.legalLinks}>
+          <Pressable
+            onPress={() => Linking.openURL('https://pania.world/privacy-policy')}
+            style={({ pressed }) => [{ opacity: pressed ? 0.6 : 1 }]}
+          >
+            <Text
+              style={[
+                styles.legalLinkText,
+                { fontFamily: fonts?.sansMedium },
+              ]}
+            >
+              Privacy Policy
+            </Text>
+          </Pressable>
+          <Text style={[styles.legalSeparator, { fontFamily: fonts?.sans }]}>
+            &middot;
+          </Text>
+          <Pressable
+            onPress={() => Linking.openURL('https://pania.world/terms-of-service')}
+            style={({ pressed }) => [{ opacity: pressed ? 0.6 : 1 }]}
+          >
+            <Text
+              style={[
+                styles.legalLinkText,
+                { fontFamily: fonts?.sansMedium },
+              ]}
+            >
+              Terms of Service
+            </Text>
+          </Pressable>
+        </View>
       </ScrollView>
     </LinearGradient>
   );
@@ -529,5 +563,22 @@ const styles = StyleSheet.create({
   },
   deleteModalDeleteButtonText: {
     color: '#D63B2B',
+  },
+  legalLinks: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: Spacing.md,
+  },
+  legalLinkText: {
+    fontSize: 13,
+    lineHeight: 17,
+    color: 'rgba(40, 38, 33, 0.5)',
+  },
+  legalSeparator: {
+    fontSize: 13,
+    lineHeight: 17,
+    color: 'rgba(40, 38, 33, 0.3)',
+    marginHorizontal: Spacing.sm,
   },
 });
