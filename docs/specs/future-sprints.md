@@ -7,8 +7,6 @@
 - ~~Client-side encryption for stored content (AES-256-GCM via @noble/ciphers)~~ — Done
 - ~~Anonymize entries before sending to AI (strip PII before sending to Anthropic)~~ — Done
 - ~~Rotate exposed Anthropic API key~~ — Done
-- Day One-style Privacy Pledge page (plain language, not legalese — "your entries are yours, we can't read them, we don't sell data, AI doesn't train on your data, delete means delete")
-- Data export feature (let users export all their data regardless of subscription status)
 - ~~Add Privacy Policy and Terms of Service links in the app profile screen~~ — Done
 
 ### Sprint 1: Authentication
@@ -19,11 +17,22 @@
 - Reduce initial card retrieval time (optimize API calls, prompt, or response streaming)
 - Loading UX strategy (skeleton cards, progressive reveal, or animation to mask latency)
 - Delete individual journal entries from the UI
+- Conversational follow-up after voice selection (retrieve only initial 4 voice cards, one card per reflection; after selection, allow the user to chat with the AI using guided prompts and parameters instead of retrieving additional cards)
+- Day One-style Privacy Pledge page (plain language, not legalese — "your entries are yours, we can't read them, we don't sell data, AI doesn't train on your data, delete means delete")
+- Data export feature (let users export all their data regardless of subscription status)
 
-### Sprint 3: Monetization
-- Decide on paywall model (freemium vs straight subscription)
-- Implement paid feature gating
-- Integrate payment provider (App Store / Google Play IAP)
+### Sprint 3: Monetization — [Full Spec](monetization.md)
+- ~~Decide on paywall model (freemium vs straight subscription)~~ — Done (freemium with voice-based gating)
+- Implement paid feature gating (voice counter, server-side enforcement)
+- Integrate payment provider (App Store / Google Play IAP via RevenueCat)
+- Build upgrade UX (interstitial, voice counter, scholarship flow)
+
+### Sprint 3.5: Android Launch
+- Expo EAS build configuration for Android
+- Google Play Console setup (listing, screenshots, metadata)
+- Google Play Billing products (mirror App Store products via RevenueCat)
+- Android-specific testing (Keystore encryption, OAuth redirects, UI differences)
+- Play Store review and release
 
 ### Sprint 4: Push Notifications
 - Daily wisdom reminders
