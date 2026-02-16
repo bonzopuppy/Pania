@@ -15,6 +15,7 @@ const FigmaColors = {
 interface ChatMessageListProps {
   messages: ChatMessage[];
   userName?: string | null;
+  stage?: string;
   onSelectVoice: (voice: Passage) => void;
   onSeeAnother: () => void;
   onSave: () => void;
@@ -30,6 +31,7 @@ interface ChatMessageListProps {
 export default function ChatMessageList({
   messages,
   userName,
+  stage,
   onSelectVoice,
   onSeeAnother,
   onSave,
@@ -67,6 +69,8 @@ export default function ChatMessageList({
     // Handle selected_voice specially
     if (message.type === 'selected_voice') {
       const reflectionText = message.voice.reflectionQuestion || 'How does this resonate with your situation?';
+      // Only show "See another voice" before the user has reflected
+      const canSeeAnother = stage === 'voice_selected';
       return (
         <View key={message.id}>
           <ExpandedVoice
@@ -75,6 +79,7 @@ export default function ChatMessageList({
             onSave={onSave}
             isSaving={isSaving}
             isSaved={isSaved}
+            showSeeAnother={canSeeAnother}
           />
           {/* Follow-up question outside the card */}
           <View style={styles.followUpContainer}>

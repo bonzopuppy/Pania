@@ -29,6 +29,7 @@ interface ExpandedVoiceProps {
   onSave: () => void;
   isSaving?: boolean;
   isSaved?: boolean;
+  showSeeAnother?: boolean;
 }
 
 export default function ExpandedVoice({
@@ -37,6 +38,7 @@ export default function ExpandedVoice({
   onSave,
   isSaving = false,
   isSaved = false,
+  showSeeAnother = true,
 }: ExpandedVoiceProps) {
   const colorScheme = useColorScheme() ?? 'light';
   const colors = Colors[colorScheme];
@@ -189,26 +191,28 @@ export default function ExpandedVoice({
         {renderCardContent()}
 
         <View style={styles.buttonsArea}>
-          {/* See another voice button */}
-          <Pressable
-            onPress={onSeeAnother}
-            style={({ pressed }) => [
-              styles.pillButton,
-              pressed && styles.pillButtonPressed,
-            ]}
-          >
-            <Text
-              style={[
-                styles.pillButtonText,
-                {
-                  color: FigmaColors.text,
-                  fontFamily: fonts?.sansSemiBold,
-                },
+          {/* See another voice button — hidden once the user has reflected */}
+          {showSeeAnother && (
+            <Pressable
+              onPress={onSeeAnother}
+              style={({ pressed }) => [
+                styles.pillButton,
+                pressed && styles.pillButtonPressed,
               ]}
             >
-              See another voice
-            </Text>
-          </Pressable>
+              <Text
+                style={[
+                  styles.pillButtonText,
+                  {
+                    color: FigmaColors.text,
+                    fontFamily: fonts?.sansSemiBold,
+                  },
+                ]}
+              >
+                See another voice
+              </Text>
+            </Pressable>
+          )}
 
           {/* Share button */}
           <Pressable

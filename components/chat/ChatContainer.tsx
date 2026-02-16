@@ -487,6 +487,7 @@ export default function ChatContainer({ onOpenJournals, restoreEntryId }: ChatCo
 
   // Go back to showing the SAME set of voice cards (before reflection)
   const handleSeeAnotherFromSameSet = () => {
+    if (voices.length === 0) return;
     seeAnotherVoice();
     showVoiceCards(voices);
   };
@@ -740,6 +741,7 @@ export default function ChatContainer({ onOpenJournals, restoreEntryId }: ChatCo
         <ChatMessageList
           messages={state.messages}
           userName={userName}
+          stage={state.stage}
           onSelectVoice={handleSelectVoice}
           onSeeAnother={handleSeeAnotherFromSameSet}
           onSave={handleSave}
