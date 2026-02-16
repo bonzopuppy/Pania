@@ -22,6 +22,7 @@ export type ConversationData = {
   userInput: string;
   clarification: string;
   selectedVoice: Passage | null;
+  availableVoices?: Passage[]; // The original set of voice cards for "see another voice"
   shownThinkers: string[];
   savedAt: string;
   isComplete: boolean; // true when a voice has been selected

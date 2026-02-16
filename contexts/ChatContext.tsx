@@ -29,6 +29,7 @@ export interface ChatState {
   messages: ChatMessage[];
   stage: ChatStage;
   selectedVoice: Passage | null;
+  availableVoices: Passage[];  // The current set of voice cards (for "see another voice")
   userInput: string;
   clarification: string;
   isSaved: boolean;
@@ -51,6 +52,7 @@ type ChatAction =
   | { type: 'SET_ERROR'; error: string | null }
   | { type: 'RESET_CHAT' }
   | { type: 'RESET_TO_VOICES' }
+  | { type: 'SET_AVAILABLE_VOICES'; voices: Passage[] }
   | { type: 'ADD_SHOWN_THINKERS'; thinkers: string[] }
   | { type: 'PREPARE_FOR_MORE_VOICES' }
   | { type: 'SET_JOURNAL_ENTRY_ID'; id: string | null }
@@ -61,6 +63,7 @@ const initialState: ChatState = {
   messages: [],
   stage: 'initial',
   selectedVoice: null,
+  availableVoices: [],
   userInput: '',
   clarification: '',
   isSaved: false,
@@ -160,6 +163,12 @@ function chatReducer(state: ChatState, action: ChatAction): ChatState {
         isSaved: false,
       };
 
+    case 'SET_AVAILABLE_VOICES':
+      return {
+        ...state,
+        availableVoices: action.voices,
+      };
+
     case 'ADD_SHOWN_THINKERS':
       return {
         ...state,
@@ -223,6 +232,7 @@ function chatReducer(state: ChatState, action: ChatAction): ChatState {
         userInput: conversationData.userInput,
         clarification: conversationData.clarification,
         selectedVoice: conversationData.selectedVoice,
+        availableVoices: conversationData.availableVoices || [],
         shownThinkers: conversationData.shownThinkers || [],
         journalEntryId: entry.id,
         isSaved: false,
@@ -259,6 +269,7 @@ interface ChatContextValue {
   selectVoice: (voice: Passage) => void;
   expandVoice: (expanded: boolean) => void;
   seeAnotherVoice: () => void;
+  setAvailableVoices: (voices: Passage[]) => void;
   prepareForMoreVoices: () => void;
   startOver: () => void;
   setLoading: (isLoading: boolean, text?: string) => void;
@@ -382,6 +393,10 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     }
   }, [state.messages]);
 
+  const setAvailableVoices = useCallback((voices: Passage[]) => {
+    dispatch({ type: 'SET_AVAILABLE_VOICES', voices });
+  }, []);
+
   const prepareForMoreVoices = useCallback(() => {
     dispatch({ type: 'PREPARE_FOR_MORE_VOICES' });
   }, []);
@@ -460,6 +475,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
       userInput: state.userInput,
       clarification: state.clarification,
       selectedVoice: state.selectedVoice,
+      availableVoices: state.availableVoices,
       shownThinkers: state.shownThinkers,
       savedAt: new Date().toISOString(),
       isComplete: state.selectedVoice !== null,
@@ -479,6 +495,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     selectVoice,
     expandVoice,
     seeAnotherVoice,
+    setAvailableVoices,
     prepareForMoreVoices,
     startOver,
     setLoading,

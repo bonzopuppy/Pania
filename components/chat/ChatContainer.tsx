@@ -45,6 +45,7 @@ export default function ChatContainer({ onOpenJournals, restoreEntryId }: ChatCo
     showVoiceCards,
     selectVoice,
     seeAnotherVoice,
+    setAvailableVoices,
     prepareForMoreVoices,
     setLoading,
     setSaved,
@@ -62,7 +63,6 @@ export default function ChatContainer({ onOpenJournals, restoreEntryId }: ChatCo
   const [showSignupModal, setShowSignupModal] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [showDevMenu, setShowDevMenu] = useState(false);
-  const [voices, setVoices] = useState<Passage[]>([]);
 
   // For triple-tap dev menu
   const tapCountRef = useRef(0);
@@ -265,7 +265,7 @@ export default function ChatContainer({ onOpenJournals, restoreEntryId }: ChatCo
     try {
       const response = await aiService.getWisdomPassages(state.userInput, state.clarification);
       setLoading(false);
-      setVoices(response.passages);
+      setAvailableVoices(response.passages);
       addShownThinkers(response.passages.map(p => p.thinker));  // Track what we showed
       addVoicesIntro('Here are some voices that might speak to your situation:');
       showVoiceCards(response.passages);
@@ -487,9 +487,9 @@ export default function ChatContainer({ onOpenJournals, restoreEntryId }: ChatCo
 
   // Go back to showing the SAME set of voice cards (before reflection)
   const handleSeeAnotherFromSameSet = () => {
-    if (voices.length === 0) return;
+    if (state.availableVoices.length === 0) return;
     seeAnotherVoice();
-    showVoiceCards(voices);
+    showVoiceCards(state.availableVoices);
   };
 
   // Fetch NEW voices with full context (after reflection)
@@ -508,7 +508,7 @@ export default function ChatContainer({ onOpenJournals, restoreEntryId }: ChatCo
         state.shownThinkers  // Exclude previously shown thinkers
       );
       setLoading(false);
-      setVoices(response.passages);
+      setAvailableVoices(response.passages);
       addShownThinkers(response.passages.map(p => p.thinker));
       showVoiceCards(response.passages);
     } catch (error) {
