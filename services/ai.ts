@@ -42,8 +42,8 @@ export interface IntentClassificationResponse {
 const CLARIFY_SYSTEM_PROMPT = `You are a thoughtful companion in a spiritual wisdom app called Pania. Your role is to help users explore what's on their mind before surfacing wisdom from various traditions.
 
 When a user shares something, you should:
-1. Provide a brief, warm acknowledgment (1 short sentence)
-2. Ask ONE gentle clarifying question to understand the emotional core
+1. Provide a brief, warm acknowledgment (1 short sentence, under 15 words)
+2. Ask ONE gentle clarifying question to understand the emotional core (1 sentence, under 25 words)
 
 Guidelines:
 - Never diagnose, label, or give advice
@@ -51,11 +51,8 @@ Guidelines:
 - Keep your tone warm, present, and unhurried
 - The question should help surface what really matters to them
 
-Respond in JSON format:
-{
-  "acknowledgment": "Brief warm acknowledgment",
-  "question": "Your single clarifying question"
-}`;
+Respond in JSON only — no markdown, no explanation:
+{"acknowledgment": "...", "question": "..."}`;
 
 const WISDOM_SYSTEM_PROMPT = `You are a thoughtful companion in a spiritual wisdom app called Pania. Based on what the user has shared, surface 4 passages from different spiritual and philosophical traditions that speak to their situation.
 
@@ -79,7 +76,7 @@ Guidelines:
 - Never editorialize or rank the passages
 - The reflection question should connect the wisdom to their specific situation
 
-Respond in JSON format:
+Respond in JSON only — no markdown, no explanation:
 {
   "passages": [
     {
@@ -104,23 +101,39 @@ Classify the user's response into ONE of these categories:
 - "wants_more_voices": User wants to see more passages (e.g., "yes", "sure", "more please", "I'd like that", "absolutely", "why not")
 - "continue_reflecting": User wants to continue their current reflection or is sharing more thoughts (e.g., "let me think", "not yet", "I'm still processing", or any substantive reflection text)
 
-Respond in JSON format only:
+Respond in JSON only — no markdown, no explanation:
 {"intent": "wants_more_voices", "confidence": 0.95}`;
 
 class AIService {
+  private cachedEmail: string | null = null;
+
   private async anonymizeText(text: string): Promise<string> {
     const name = await getUserName();
-    const { data: { user } } = await supabase.auth.getUser();
-    return anonymize(text, name, user?.email);
+    if (this.cachedEmail === null) {
+      const { data: { user } } = await supabase.auth.getUser();
+      this.cachedEmail = user?.email ?? '';
+    }
+    return anonymize(text, name, this.cachedEmail || undefined);
   }
 
-  private async callClaude(systemPrompt: string, userMessage: string): Promise<string> {
+  private async callClaude(
+    systemPrompt: string,
+    userMessage: string,
+    options?: { model?: string; max_tokens?: number; prefill?: string }
+  ): Promise<string> {
+    const messages: Array<{ role: string; content: string }> = [
+      { role: 'user', content: userMessage },
+    ];
+    if (options?.prefill) {
+      messages.push({ role: 'assistant', content: options.prefill });
+    }
+
     const { data, error } = await supabase.functions.invoke('claude-proxy', {
       body: {
         system: systemPrompt,
-        messages: [{ role: 'user', content: userMessage }],
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1024,
+        messages,
+        model: options?.model || 'claude-sonnet-4-20250514',
+        max_tokens: options?.max_tokens || 1024,
       },
     });
 
@@ -132,23 +145,37 @@ class AIService {
       throw new Error(`AI service error: ${data.error}`);
     }
 
-    return data.content[0].text;
+    const text = data.content[0].text;
+    // When using prefill, prepend it to the response to get the complete output
+    return options?.prefill ? options.prefill + text : text;
+  }
+
+  /**
+   * Parse JSON from a response, tolerant of trailing text.
+   * Tries direct parse first, falls back to regex extraction.
+   */
+  private parseJSON<T>(response: string): T {
+    try {
+      return JSON.parse(response) as T;
+    } catch {
+      const jsonMatch = response.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) {
+        throw new Error('No JSON found in response');
+      }
+      return JSON.parse(jsonMatch[0]) as T;
+    }
   }
 
   async getClarifyingQuestion(userInput: string): Promise<ClarifyResponse> {
     const safeInput = await this.anonymizeText(userInput);
     const response = await this.callClaude(
       CLARIFY_SYSTEM_PROMPT,
-      `The user shared: "${safeInput}"`
+      `The user shared: "${safeInput}"`,
+      { max_tokens: 256, prefill: '{' }
     );
 
     try {
-      // Extract JSON from response (handle markdown code blocks)
-      const jsonMatch = response.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) {
-        throw new Error('No JSON found in response');
-      }
-      return JSON.parse(jsonMatch[0]) as ClarifyResponse;
+      return this.parseJSON<ClarifyResponse>(response);
     } catch (e) {
       console.error('Failed to parse clarify response:', response);
       // Fallback response
@@ -165,9 +192,11 @@ class AIService {
     conversationContext?: string,    // Full conversation summary
     excludeThinkers?: string[]       // Previously shown thinker names
   ): Promise<WisdomResponse> {
-    const safeInput = await this.anonymizeText(userInput);
-    const safeClarification = await this.anonymizeText(clarification);
-    const safeContext = conversationContext ? await this.anonymizeText(conversationContext) : undefined;
+    const [safeInput, safeClarification, safeContext] = await Promise.all([
+      this.anonymizeText(userInput),
+      this.anonymizeText(clarification),
+      conversationContext ? this.anonymizeText(conversationContext) : Promise.resolve(undefined),
+    ]);
     const userMessage = `The user initially shared: "${safeInput}"
 
 When asked to clarify, they said: "${safeClarification}"
@@ -177,16 +206,12 @@ Please surface 4 NEW passages from different traditions that speak to this situa
 
     const response = await this.callClaude(
       WISDOM_SYSTEM_PROMPT,
-      userMessage
+      userMessage,
+      { prefill: '{' }
     );
 
     try {
-      // Extract JSON from response (handle markdown code blocks)
-      const jsonMatch = response.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) {
-        throw new Error('No JSON found in response');
-      }
-      return JSON.parse(jsonMatch[0]) as WisdomResponse;
+      return this.parseJSON<WisdomResponse>(response);
     } catch (e) {
       console.error('Failed to parse wisdom response:', response);
       // Return fallback passages
@@ -201,8 +226,10 @@ Please surface 4 NEW passages from different traditions that speak to this situa
     selectedVoice: Passage,
     reflection: string
   ): Promise<ReflectionAcknowledgmentResponse> {
-    const safeInput = await this.anonymizeText(userInput);
-    const safeReflection = await this.anonymizeText(reflection);
+    const [safeInput, safeReflection] = await Promise.all([
+      this.anonymizeText(userInput),
+      this.anonymizeText(reflection),
+    ]);
     const systemPrompt = `You are a thoughtful companion helping someone reflect on wisdom.
 
 The user shared: "${safeInput}"
@@ -216,17 +243,16 @@ Respond with a brief, warm acknowledgment (2-3 sentences) that:
 
 Then, in a SEPARATE paragraph (use \\n\\n), ask if they'd like to hear more voices on this.
 
-Respond with JSON: { "acknowledgment": "your response with two paragraphs separated by \\n\\n" }`;
+Respond in JSON only — no markdown, no explanation:
+{"acknowledgment": "your response with two paragraphs separated by \\n\\n"}`;
 
-    const response = await this.callClaude(systemPrompt, safeReflection);
+    const response = await this.callClaude(systemPrompt, safeReflection, {
+      max_tokens: 512,
+      prefill: '{',
+    });
 
     try {
-      // Extract JSON from response (handle markdown code blocks)
-      const jsonMatch = response.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) {
-        throw new Error('No JSON found in response');
-      }
-      return JSON.parse(jsonMatch[0]) as ReflectionAcknowledgmentResponse;
+      return this.parseJSON<ReflectionAcknowledgmentResponse>(response);
     } catch (e) {
       console.error('Failed to parse reflection acknowledgment response:', response);
       // Fallback response
@@ -238,14 +264,14 @@ Respond with JSON: { "acknowledgment": "your response with two paragraphs separa
 
   async classifyIntent(userMessage: string): Promise<IntentClassificationResponse> {
     const safeMessage = await this.anonymizeText(userMessage);
-    const response = await this.callClaude(INTENT_CLASSIFICATION_PROMPT, safeMessage);
+    const response = await this.callClaude(INTENT_CLASSIFICATION_PROMPT, safeMessage, {
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 64,
+      prefill: '{',
+    });
 
     try {
-      const jsonMatch = response.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) {
-        throw new Error('No JSON found in response');
-      }
-      return JSON.parse(jsonMatch[0]) as IntentClassificationResponse;
+      return this.parseJSON<IntentClassificationResponse>(response);
     } catch (e) {
       console.error('Failed to parse intent classification:', response);
       // Fallback: treat as continue_reflecting to be safe
