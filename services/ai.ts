@@ -150,6 +150,66 @@ class AIService {
     return options?.prefill ? options.prefill + text : text;
   }
 
+  private async callClaudeStreaming(
+    systemPrompt: string,
+    userMessage: string,
+    options?: { model?: string; max_tokens?: number; prefill?: string }
+  ): Promise<string> {
+    const messages: Array<{ role: string; content: string }> = [
+      { role: 'user', content: userMessage },
+    ];
+    if (options?.prefill) {
+      messages.push({ role: 'assistant', content: options.prefill });
+    }
+
+    const { data, error } = await supabase.functions.invoke('claude-proxy', {
+      body: {
+        system: systemPrompt,
+        messages,
+        model: options?.model || 'claude-sonnet-4-20250514',
+        max_tokens: options?.max_tokens || 1024,
+        stream: true,
+      },
+    });
+
+    if (error) {
+      throw new Error(`AI streaming proxy error: ${error.message}`);
+    }
+
+    // invoke() returns a raw Response for text/event-stream — read it as text
+    let sseText: string;
+    if (data instanceof Response) {
+      sseText = await data.text();
+    } else if (typeof data === 'string') {
+      sseText = data;
+    } else {
+      throw new Error('Unexpected streaming response type');
+    }
+
+    // Parse SSE events and accumulate text deltas
+    let accumulated = '';
+    const lines = sseText.split('\n');
+    for (const line of lines) {
+      if (!line.startsWith('data: ')) continue;
+      const eventData = line.slice(6);
+      if (eventData === '[DONE]') break;
+      try {
+        const event = JSON.parse(eventData);
+        if (event.type === 'error') {
+          throw new Error(`Anthropic stream error: ${event.error?.message || 'unknown'}`);
+        }
+        if (event.type === 'content_block_delta' && event.delta?.type === 'text_delta') {
+          accumulated += event.delta.text;
+        }
+      } catch (e) {
+        if (e instanceof SyntaxError) continue;
+        throw e;
+      }
+    }
+
+    return options?.prefill ? options.prefill + accumulated : accumulated;
+  }
+
   /**
    * Parse JSON from a response, tolerant of trailing text.
    * Tries direct parse first, falls back to regex extraction.
@@ -168,7 +228,7 @@ class AIService {
 
   async getClarifyingQuestion(userInput: string): Promise<ClarifyResponse> {
     const safeInput = await this.anonymizeText(userInput);
-    const response = await this.callClaude(
+    const response = await this.callClaudeStreaming(
       CLARIFY_SYSTEM_PROMPT,
       `The user shared: "${safeInput}"`,
       { max_tokens: 256, prefill: '{' }
@@ -204,7 +264,7 @@ When asked to clarify, they said: "${safeClarification}"
 ${safeContext ? `Additional context from the conversation:\n${safeContext}\n` : ''}${excludeThinkers?.length ? `IMPORTANT: Do NOT include passages from these thinkers who were already shown: ${excludeThinkers.join(', ')}\n` : ''}
 Please surface 4 NEW passages from different traditions that speak to this situation.`;
 
-    const response = await this.callClaude(
+    const response = await this.callClaudeStreaming(
       WISDOM_SYSTEM_PROMPT,
       userMessage,
       { prefill: '{' }
@@ -246,7 +306,7 @@ Then, in a SEPARATE paragraph (use \\n\\n), ask if they'd like to hear more voic
 Respond in JSON only — no markdown, no explanation:
 {"acknowledgment": "your response with two paragraphs separated by \\n\\n"}`;
 
-    const response = await this.callClaude(systemPrompt, safeReflection, {
+    const response = await this.callClaudeStreaming(systemPrompt, safeReflection, {
       max_tokens: 512,
       prefill: '{',
     });

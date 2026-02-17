@@ -14,18 +14,17 @@
 - ~~Hook up Apple OAuth (replace "Coming Soon" alert with real sign-in)~~ — Done
 
 ### Sprint 2a: Quick Performance Wins
-Targeted optimizations that reduce card retrieval latency with minimal risk. Combined impact: ~40-60% perceived improvement.
+~~Targeted optimizations that reduce card retrieval latency with minimal risk. Combined impact: ~40-60% perceived improvement.~~ — Done
 
-1. **Use Haiku for classification** — Switch `classifyIntent()` from Sonnet to `claude-haiku-4-5-20251001`. Simple yes/no classification doesn't need Sonnet-level reasoning. 3-5x faster, 10-12x cheaper. Lower `max_tokens` from 1024 → 64.
-2. **Reduce auth overhead** — Cache user email in `AIService` instead of calling `supabase.auth.getUser()` on every `anonymizeText()` call (~100-300ms round-trip wasted per API call). Parallelize the 3 sequential `anonymizeText()` calls in `getWisdomPassages()` with `Promise.all`.
-3. **Prompt optimization** — Lower `max_tokens` per call type (256 for clarify, 64 for classification, keep 1024 for wisdom). Add explicit length constraints to prompts ("Keep acknowledgment under 15 words"). Use JSON prefill (pre-seed assistant response with `{`) to eliminate markdown wrapping and the regex extraction step.
-4. **UX: Skeleton cards + staggered reveal** — Show 4 placeholder cards with pulsing gray shapes during loading (skeleton screens reduce perceived latency 20-30%). Stagger card appearance with 150-200ms delays. Use rotating loading messages ("Searching across traditions...", "Gathering voices...").
+1. ~~**Use Haiku for classification** — Switch `classifyIntent()` from Sonnet to `claude-haiku-4-5-20251001`. Simple yes/no classification doesn't need Sonnet-level reasoning. 3-5x faster, 10-12x cheaper. Lower `max_tokens` from 1024 → 64.~~ — Done
+2. ~~**Reduce auth overhead** — Cache user email in `AIService` instead of calling `supabase.auth.getUser()` on every `anonymizeText()` call (~100-300ms round-trip wasted per API call). Parallelize the 3 sequential `anonymizeText()` calls in `getWisdomPassages()` with `Promise.all`.~~ — Done
+3. ~~**Prompt optimization** — Lower `max_tokens` per call type (256 for clarify, 64 for classification, keep 1024 for wisdom). Add explicit length constraints to prompts ("Keep acknowledgment under 15 words"). Use JSON prefill (pre-seed assistant response with `{`) to eliminate markdown wrapping and the regex extraction step.~~ — Done
+4. ~~**UX: Skeleton cards + staggered reveal** — Show 4 placeholder cards with pulsing gray shapes during loading (skeleton screens reduce perceived latency 20-30%). Stagger card appearance with 150-200ms delays. Use rotating loading messages ("Searching across traditions...", "Gathering voices...").~~ — Done
 
-### Sprint 2b: Streaming & Prefetching
-Higher-impact changes that transform the loading experience. Combined impact: near-instant perceived card delivery.
+### Sprint 2b: Streaming
+~~Higher-impact change that transforms the loading experience.~~ — Done
 
-5. **Streaming responses** — Stream from Anthropic → Edge Function (SSE passthrough) → client (`expo/fetch` or `react-native-sse`). Time-to-first-token drops from 2-5s to ~200-500ms. For JSON responses, accumulate chunks then parse on stream complete. Requires Edge Function changes to pipe SSE and client-side stream consumer.
-6. **Speculative prefetching** — Start generating wisdom cards (with empty clarification) while user reads/answers the clarifying question. If the clarification aligns with the initial input, skip the second wait entirely. Discard and re-fetch if the user's clarification significantly changes direction. ~30-50% reduction on second API call.
+5. ~~**Streaming responses** — Stream from Anthropic → Edge Function (SSE passthrough) → client (`expo/fetch` or `react-native-sse`). Time-to-first-token drops from 2-5s to ~200-500ms. For JSON responses, accumulate chunks then parse on stream complete. Requires Edge Function changes to pipe SSE and client-side stream consumer.~~ — Done
 
 ### Sprint 2c: Future Performance Enhancements
 Optimizations to revisit when the app scales or prompts evolve.
@@ -72,6 +71,11 @@ Optimizations to revisit when the app scales or prompts evolve.
 - Extended journal sessions with follow-up questions
 - Journal entry summaries and insights over time
 - Reflection history and patterns
+
+## Parking Lot
+Ideas deferred — may revisit if needed.
+
+- **Speculative prefetching** — Start generating wisdom cards (with empty clarification) while user reads/answers the clarifying question. If the clarification aligns with the initial input, skip the second wait entirely. Discard and re-fetch if the user's clarification significantly changes direction. ~30-50% reduction on second API call. *Deferred: risk of wasted API calls and added state complexity.*
 
 ## Post-Launch: Privacy Enhancements
 - Cloud encryption key backup (iCloud Keychain sync for iOS, Google encrypted backup for Android)

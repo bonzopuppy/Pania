@@ -34,7 +34,7 @@ Deno.serve(async (req) => {
     }
 
     // Parse the request body
-    const { system, messages, model, max_tokens } = await req.json();
+    const { system, messages, model, max_tokens, stream } = await req.json();
 
     if (!system || !messages) {
       return new Response(
@@ -52,6 +52,16 @@ Deno.serve(async (req) => {
       );
     }
 
+    const anthropicBody: Record<string, unknown> = {
+      model: model || 'claude-sonnet-4-20250514',
+      max_tokens: max_tokens || 1024,
+      system,
+      messages,
+    };
+    if (stream) {
+      anthropicBody.stream = true;
+    }
+
     const anthropicResponse = await fetch(ANTHROPIC_API_URL, {
       method: 'POST',
       headers: {
@@ -59,12 +69,7 @@ Deno.serve(async (req) => {
         'x-api-key': anthropicKey,
         'anthropic-version': '2023-06-01',
       },
-      body: JSON.stringify({
-        model: model || 'claude-sonnet-4-20250514',
-        max_tokens: max_tokens || 1024,
-        system,
-        messages,
-      }),
+      body: JSON.stringify(anthropicBody),
     });
 
     if (!anthropicResponse.ok) {
@@ -74,6 +79,18 @@ Deno.serve(async (req) => {
         JSON.stringify({ error: `AI service error: ${anthropicResponse.status}` }),
         { status: anthropicResponse.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
+    }
+
+    // Streaming: pipe Anthropic's SSE response directly to client
+    if (stream) {
+      return new Response(anthropicResponse.body, {
+        status: 200,
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'text/event-stream',
+          'Cache-Control': 'no-cache',
+        },
+      });
     }
 
     const data = await anthropicResponse.json();
