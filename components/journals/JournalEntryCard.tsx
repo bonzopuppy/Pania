@@ -1,11 +1,13 @@
-import React from 'react';
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import React, { useRef, useState } from 'react';
+import { View, Text, Pressable, StyleSheet, Modal, Animated } from 'react-native';
+import { Swipeable } from 'react-native-gesture-handler';
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { Fonts, Spacing, Palette } from '@/constants/theme';
 import { JournalEntry, ConversationData } from '@/services/journal';
 import PromptIcon from '@/assets/images/icons/prompt.svg';
+import DeleteIcon from '@/assets/images/icons/delete.svg';
 import MiniPattern from '@/assets/images/patterns/mini-pattern.svg';
 
 type Tradition = 'stoicism' | 'christianity' | 'buddhism' | 'sufism' | 'taoism' | 'judaism';
@@ -22,10 +24,13 @@ interface JournalEntryCardProps {
   entry: JournalEntry;
   onPress?: (entry: JournalEntry) => void;
   onContinue?: (entry: JournalEntry) => void;
+  onDelete?: (entry: JournalEntry) => void;
 }
 
-export default function JournalEntryCard({ entry, onPress, onContinue }: JournalEntryCardProps) {
+export default function JournalEntryCard({ entry, onPress, onContinue, onDelete }: JournalEntryCardProps) {
   const fonts = Fonts;
+  const swipeableRef = useRef<Swipeable>(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   const isComplete = !!entry.thinker;
   const traditionColors = isComplete
@@ -34,6 +39,35 @@ export default function JournalEntryCard({ entry, onPress, onContinue }: Journal
 
   const conversationData = entry.conversation_data as ConversationData | null;
   const hasConversationData = conversationData && conversationData.messages?.length > 0;
+
+  const handleDelete = () => {
+    swipeableRef.current?.close();
+    setShowDeleteModal(true);
+  };
+
+  const confirmDelete = () => {
+    setShowDeleteModal(false);
+    onDelete?.(entry);
+  };
+
+  const renderRightActions = (
+    _progress: Animated.AnimatedInterpolation<number>,
+    dragX: Animated.AnimatedInterpolation<number>
+  ) => {
+    const scale = dragX.interpolate({
+      inputRange: [-80, 0],
+      outputRange: [1, 0.5],
+      extrapolate: 'clamp',
+    });
+
+    return (
+      <Pressable onPress={handleDelete} style={styles.deleteAction}>
+        <Animated.View style={[styles.deleteActionInner, { transform: [{ scale }] }]}>
+          <DeleteIcon width={32} height={32} />
+        </Animated.View>
+      </Pressable>
+    );
+  };
 
   const handlePress = () => {
     if (onPress) {
@@ -49,9 +83,74 @@ export default function JournalEntryCard({ entry, onPress, onContinue }: Journal
     }
   };
 
+  const deleteModal = (
+    <Modal
+      visible={showDeleteModal}
+      transparent
+      animationType="fade"
+      onRequestClose={() => setShowDeleteModal(false)}
+    >
+      <Pressable
+        style={styles.modalOverlay}
+        onPress={() => setShowDeleteModal(false)}
+      >
+        <View
+          style={styles.modalContainer}
+          onStartShouldSetResponder={() => true}
+        >
+          <BlurView intensity={80} tint="light" style={styles.modalBlur}>
+            <View style={styles.modalContent}>
+              <View style={styles.modalTextSection}>
+                <Text style={[styles.modalTitle, { fontFamily: fonts?.sansSemiBold }]}>
+                  Delete Entry
+                </Text>
+                <Text style={[styles.modalDescription, { fontFamily: fonts?.sans }]}>
+                  This will permanently delete this journal entry. This cannot be undone.
+                </Text>
+              </View>
+
+              <View style={styles.modalButtons}>
+                <Pressable
+                  onPress={confirmDelete}
+                  style={({ pressed }) => [
+                    styles.modalButton,
+                    { opacity: pressed ? 0.7 : 1 },
+                  ]}
+                >
+                  <Text style={[styles.modalButtonTextDestructive, { fontFamily: fonts?.sansSemiBold }]}>
+                    Yes, delete it
+                  </Text>
+                </Pressable>
+
+                <Pressable
+                  onPress={() => setShowDeleteModal(false)}
+                  style={({ pressed }) => [
+                    styles.modalButton,
+                    { opacity: pressed ? 0.7 : 1 },
+                  ]}
+                >
+                  <Text style={[styles.modalButtonText, { fontFamily: fonts?.sansMedium }]}>
+                    Cancel
+                  </Text>
+                </Pressable>
+              </View>
+            </View>
+          </BlurView>
+        </View>
+      </Pressable>
+    </Modal>
+  );
+
   // Incomplete entry card (no voice selected)
   if (!isComplete) {
     return (
+      <Swipeable
+        ref={swipeableRef}
+        renderRightActions={onDelete ? renderRightActions : undefined}
+        overshootRight={false}
+        friction={2}
+      >
+      {deleteModal}
       <Pressable
         onPress={handlePress}
         style={({ pressed }) => [
@@ -114,11 +213,19 @@ export default function JournalEntryCard({ entry, onPress, onContinue }: Journal
           </View>
         </BlurView>
       </Pressable>
+      </Swipeable>
     );
   }
 
   // Complete entry card (with voice selected)
   return (
+    <Swipeable
+      ref={swipeableRef}
+      renderRightActions={onDelete ? renderRightActions : undefined}
+      overshootRight={false}
+      friction={2}
+    >
+    {deleteModal}
     <Pressable
       onPress={handlePress}
       style={({ pressed }) => [
@@ -205,6 +312,7 @@ export default function JournalEntryCard({ entry, onPress, onContinue }: Journal
         </View>
       </BlurView>
     </Pressable>
+    </Swipeable>
   );
 }
 
@@ -277,5 +385,73 @@ const styles = StyleSheet.create({
   continueAction: {
     fontSize: 14,
     lineHeight: 20,
+  },
+  deleteAction: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: 80,
+    marginBottom: Spacing.md,
+  },
+  deleteActionInner: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#FF4245',
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.3)',
+  },
+  modalContainer: {
+    width: 300,
+    borderRadius: 24,
+    overflow: 'hidden',
+  },
+  modalBlur: {
+    borderRadius: 24,
+    overflow: 'hidden',
+  },
+  modalContent: {
+    padding: 14,
+    gap: 10,
+  },
+  modalTextSection: {
+    paddingHorizontal: 8,
+    paddingTop: 8,
+    paddingBottom: 24,
+  },
+  modalTitle: {
+    fontSize: 17,
+    color: '#000000',
+    textAlign: 'center',
+    marginBottom: 4,
+  },
+  modalDescription: {
+    fontSize: 13,
+    color: '#000000',
+    textAlign: 'center',
+    lineHeight: 18,
+  },
+  modalButtons: {
+    gap: 10,
+  },
+  modalButton: {
+    height: 48,
+    borderRadius: 100,
+    backgroundColor: 'rgba(120,120,128,0.16)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalButtonTextDestructive: {
+    fontSize: 17,
+    color: '#FF383C',
+  },
+  modalButtonText: {
+    fontSize: 17,
+    color: '#000000',
   },
 });

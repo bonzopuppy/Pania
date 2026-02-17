@@ -11,7 +11,6 @@ import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect, router } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
 
 import { Fonts, Typography, Spacing, BorderRadius, Palette } from '@/constants/theme';
 import AddIcon from '@/assets/images/icons/add.svg';
@@ -26,7 +25,7 @@ const JournalsColors = {
   buttonText: '#FAF7F3',
 };
 import { getUserId } from '@/services/storage';
-import { getJournalEntries, getTraditionsPerDay, JournalEntry } from '@/services/journal';
+import { getJournalEntries, deleteJournalEntry, getTraditionsPerDay, JournalEntry } from '@/services/journal';
 import SignupModal from '@/components/SignupModal';
 import { CalendarStrip, JournalEntryCard } from '@/components/journals';
 
@@ -87,6 +86,15 @@ export default function JournalsScreen() {
     router.push('/chat');
   };
 
+  const handleDeleteEntry = async (entry: JournalEntry) => {
+    const { error } = await deleteJournalEntry(entry.id);
+    if (error) {
+      console.error('Failed to delete journal entry:', error);
+      return;
+    }
+    setEntries((prev) => prev.filter((e) => e.id !== entry.id));
+  };
+
   // Calculate entries per day for calendar dots
   const entriesPerDay = useMemo(() => {
     const map: Record<string, number> = {};
@@ -131,7 +139,7 @@ export default function JournalsScreen() {
   };
 
   const renderEntry = ({ item }: { item: JournalEntry }) => (
-    <JournalEntryCard entry={item} />
+    <JournalEntryCard entry={item} onDelete={handleDeleteEntry} />
   );
 
   const renderEmptyState = () => {
