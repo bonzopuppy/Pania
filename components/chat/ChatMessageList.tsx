@@ -46,12 +46,12 @@ export default function ChatMessageList({
   const fonts = Fonts;
   const scrollViewRef = useRef<ScrollView>(null);
 
-  // Auto-scroll to bottom when new messages arrive
+  // Auto-scroll to bottom when new messages arrive or skeleton cards appear
   useEffect(() => {
     setTimeout(() => {
       scrollViewRef.current?.scrollToEnd({ animated: true });
     }, 100);
-  }, [messages]);
+  }, [messages, stage]);
 
   const renderMessage = (message: ChatMessage, index: number) => {
     // Handle voice_cards specially
@@ -149,6 +149,9 @@ export default function ChatMessageList({
       automaticallyAdjustKeyboardInsets={Platform.OS === 'ios'}
     >
       {messages.map((message, index) => renderMessage(message, index))}
+      {stage === 'loading_voices' && (
+        <VoiceCardsRow skeleton />
+      )}
     </ScrollView>
   );
 }

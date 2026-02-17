@@ -1,9 +1,60 @@
-import React from 'react';
-import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { View, Text, StyleSheet, ActivityIndicator, Animated } from 'react-native';
 import { Colors, Fonts, Typography, Spacing, BorderRadius } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { ChatMessage } from '@/contexts/ChatContext';
 import MiniPattern from '@/assets/images/patterns/mini-pattern.svg';
+
+const ROTATING_MESSAGES = [
+  'Finding wisdom...',
+  'Searching across traditions...',
+  'Gathering voices...',
+  'Exploring perspectives...',
+];
+
+const ROTATING_TRIGGER_TEXTS = ['Finding wisdom...', 'Finding more wisdom...'];
+
+function RotatingLoadingText({ fontFamily }: { fontFamily?: string }) {
+  const [index, setIndex] = useState(0);
+  const fadeAnim = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      // Fade out
+      Animated.timing(fadeAnim, {
+        toValue: 0,
+        duration: 150,
+        useNativeDriver: true,
+      }).start(() => {
+        // Switch text
+        setIndex((prev) => (prev + 1) % ROTATING_MESSAGES.length);
+        // Fade in
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 150,
+          useNativeDriver: true,
+        }).start();
+      });
+    }, 2500);
+
+    return () => clearInterval(interval);
+  }, [fadeAnim]);
+
+  return (
+    <Animated.Text
+      style={[
+        styles.loadingText,
+        {
+          color: FigmaColors.text,
+          fontFamily,
+          opacity: fadeAnim,
+        },
+      ]}
+    >
+      {ROTATING_MESSAGES[index]}
+    </Animated.Text>
+  );
+}
 
 // Figma design colors
 const FigmaColors = {
@@ -28,21 +79,27 @@ export default function ChatBubble({ message, userName }: ChatBubbleProps) {
 
   // Render loading indicator
   if (message.type === 'loading') {
+    const shouldRotate = message.text && ROTATING_TRIGGER_TEXTS.includes(message.text);
+
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="small" color={FigmaColors.text} />
-        {message.text && (
-          <Text
-            style={[
-              styles.loadingText,
-              {
-                color: FigmaColors.text,
-                fontFamily: fonts?.sans,
-              },
-            ]}
-          >
-            {message.text}
-          </Text>
+        {shouldRotate ? (
+          <RotatingLoadingText fontFamily={fonts?.sans} />
+        ) : (
+          message.text && (
+            <Text
+              style={[
+                styles.loadingText,
+                {
+                  color: FigmaColors.text,
+                  fontFamily: fonts?.sans,
+                },
+              ]}
+            >
+              {message.text}
+            </Text>
+          )
         )}
       </View>
     );
