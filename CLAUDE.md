@@ -1,9 +1,25 @@
 # Pania Project Guidelines
 
-## Sprint Tracking
+## Sprint Document Maintenance
 
-- The sprint roadmap lives at `docs/specs/future-sprints.md`. When a sprint task is completed, strike it through with `~~` and mark it "Done". When all items in a sprint are finished, move the entire sprint under the **Completed** section.
-- Security and privacy decisions are documented in `docs/specs/security.md`. Keep it updated when security-related changes are made.
+**File:** `SPRINT.md` (project root)
+
+This project uses a sprint document to track tasks. A dashboard aggregates these across all projects, so consistent formatting matters.
+
+### Format
+- Section headers must contain "In Progress", "Backlog", or "Completed" (case-insensitive)
+- Tasks must use `- [ ]` / `- [x]` checkbox format only
+- **Every sprint must have a `###` sub-heading** with a number and theme: `### Sprint N: Theme`
+- Add completion dates when marking done: `- [x] Task (YYYY-MM-DD)`
+
+### When to Update
+- **Proactively ask the user** "Should I update the sprint doc?" when a task is completed, new work emerges, or priorities shift
+- Move completed tasks to Completed with `[x]` and date, keeping the sprint sub-heading
+- Never delete tasks without asking — move to Completed or Parked
+
+### Additional References
+- Detailed sprint roadmap: `docs/specs/future-sprints.md`
+- Security and privacy decisions: `docs/specs/security.md`
 
 ## Design Implementation Rules
 

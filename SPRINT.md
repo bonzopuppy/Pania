@@ -1,21 +1,17 @@
 # Pania Sprint Tracker
 
-Current: **Sprint 2d — Journal UX & Features + Sprint 3 Monetization**
+Current: **Sprint 2d — Journal UX & Features**
 
 ---
 
 ## In Progress
 
-### Bugs
-- [ ] Follow-ups to initial voice card not being saved
-
 ### Sprint 2d: Journal UX & Features
+- [ ] Fix: follow-ups to initial voice card not being saved (bug)
 - [ ] Delete individual journal entries from the UI
 - [ ] Conversational follow-up after voice selection
 - [ ] Privacy Pledge page (Day One-style, plain language)
 - [ ] Data export feature
-
-### v1.x Near-term
 - [ ] Timestamps on all entries
 - [ ] Multiple cards display on My Journals page — rethink layout
 
@@ -55,8 +51,25 @@ Current: **Sprint 2d — Journal UX & Features + Sprint 3 Monetization**
 
 ## Completed
 
-- [x] Sprint 0: Privacy & Security — API key server-side, client-side encryption, PII scrubbing (2026-02-14)
-- [x] Sprint 1: Authentication — Google OAuth, Apple OAuth (2026-02-14)
-- [x] Sprint 2a: Quick Performance Wins — Haiku for classification, auth caching, prompt optimization, skeleton cards (2026-02-14)
-- [x] Sprint 2b: Streaming — SSE from Anthropic through Edge Function to client (2026-02-14)
-- [x] Monetization model decided — freemium with voice-based gating (2026-02-14)
+### Sprint 0: Privacy & Security
+- [x] Move Anthropic API key server-side (2026-02-14)
+- [x] Client-side encryption AES-256-GCM (2026-02-14)
+- [x] Anonymize entries before sending to AI (2026-02-14)
+- [x] Rotate exposed API key (2026-02-14)
+- [x] Add Privacy Policy and ToS links (2026-02-14)
+
+### Sprint 1: Authentication
+- [x] Google OAuth (2026-02-14)
+- [x] Apple OAuth (2026-02-14)
+
+### Sprint 2a: Performance
+- [x] Haiku for classification (2026-02-14)
+- [x] Reduce auth overhead (2026-02-14)
+- [x] Prompt optimization (2026-02-14)
+- [x] Skeleton cards + staggered reveal (2026-02-14)
+
+### Sprint 2b: Streaming
+- [x] SSE from Anthropic through Edge Function to client (2026-02-14)
+
+### Sprint 2c: Monetization Decision
+- [x] Decided on freemium with voice-based gating (2026-02-14)
