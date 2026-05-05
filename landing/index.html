@@ -91,25 +91,59 @@
       max-width: 420px;
     }
 
-    .download-buttons {
-      display: flex;
-      gap: 16px;
+    .coming-soon {
+      display: inline-flex;
       align-items: center;
-      justify-content: center;
+      gap: 10px;
+      padding: 12px 20px;
+      background: rgba(255, 255, 255, 0.35);
+      border: 1px solid rgba(106, 79, 62, 0.18);
+      border-radius: 999px;
+      color: #573B2A;
+      font-family: 'Figtree', sans-serif;
+      font-weight: 500;
+      font-size: 15px;
+      letter-spacing: 0.2px;
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      user-select: none;
+      cursor: default;
     }
 
-    .download-buttons a {
-      display: inline-block;
-      transition: opacity 0.2s ease;
+    .coming-soon-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #C97A3F;
+      box-shadow: 0 0 0 0 rgba(201, 122, 63, 0.6);
+      animation: coming-soon-pulse 2s ease-out infinite;
+      flex-shrink: 0;
     }
 
-    .download-buttons a:hover {
-      opacity: 0.8;
+    .coming-soon-platforms {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-left: 2px;
+      opacity: 0.7;
     }
 
-    .download-buttons img {
-      height: 48px;
-      width: auto;
+    .coming-soon-platforms svg {
+      width: 14px;
+      height: 14px;
+      fill: #573B2A;
+    }
+
+    @keyframes coming-soon-pulse {
+      0% {
+        box-shadow: 0 0 0 0 rgba(201, 122, 63, 0.55);
+      }
+      70% {
+        box-shadow: 0 0 0 10px rgba(201, 122, 63, 0);
+      }
+      100% {
+        box-shadow: 0 0 0 0 rgba(201, 122, 63, 0);
+      }
     }
 
     .content-footer {
@@ -310,13 +344,13 @@
       asks thoughtful questions, and surfaces wisdom from across spiritual
       and philosophical traditions.
     </p>
-    <div class="download-buttons">
-      <a href="#" aria-label="Download on the App Store">
-        <img src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg" alt="Download on the App Store">
-      </a>
-      <a href="#" aria-label="Get it on Google Play">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg" alt="Get it on Google Play">
-      </a>
+    <div class="coming-soon" role="status" aria-label="Coming soon to iOS and Android">
+      <span class="coming-soon-dot" aria-hidden="true"></span>
+      <span>Coming soon to iOS &amp; Android</span>
+      <span class="coming-soon-platforms" aria-hidden="true">
+        <svg viewBox="0 0 384 512" xmlns="http://www.w3.org/2000/svg"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zM260.6 110c20.6-24.4 32.5-58.6 28.5-86.6-29.7 1.2-61 19.9-79.7 43.7-16 19.7-30.1 41.4-26.4 70.8 24.5 1.4 51.6-13.5 77.6-27.9z"/></svg>
+        <svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg"><path d="M325.3 234.3 104.3 13.7l255.4 145.7-34.4 74.9zM47 0C34 6.8 25.3 19.2 25.3 35.3v441.3c0 16.1 8.7 28.5 21.7 35.3l257.3-256L47 0zm425.7 225L417.4 193l-62 53.7 62 53.7 56.5-32c17-13.5 17-39.3-1.2-43.4zM104.3 498.3l255.4-145.7-34.4-34.5L104.3 498.3z"/></svg>
+      </span>
     </div>
 
     <div class="content-footer">
